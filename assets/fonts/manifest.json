@@ -1,0 +1,114 @@
+[
+  {
+    "family": "JetBrains Mono",
+    "weight": "400",
+    "style": "normal",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx7cwhsk.woff2",
+    "file": "JetBrainsMono-400-normal-latin-ext.woff2"
+  },
+  {
+    "family": "JetBrains Mono",
+    "weight": "400",
+    "style": "normal",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2",
+    "file": "JetBrainsMono-400-normal-latin.woff2"
+  },
+  {
+    "family": "JetBrains Mono",
+    "weight": "700",
+    "style": "normal",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx7cwhsk.woff2",
+    "file": "JetBrainsMono-700-normal-latin-ext.woff2"
+  },
+  {
+    "family": "JetBrains Mono",
+    "weight": "700",
+    "style": "normal",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2",
+    "file": "JetBrainsMono-700-normal-latin.woff2"
+  },
+  {
+    "family": "Montserrat",
+    "weight": "400",
+    "style": "italic",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUFjIg1_i6t8kCHKm459Wx7xQYXK0vOoz6jq6R9WXZ0poK5.woff2",
+    "file": "Montserrat-400-italic-latin-ext.woff2"
+  },
+  {
+    "family": "Montserrat",
+    "weight": "400",
+    "style": "italic",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUFjIg1_i6t8kCHKm459Wx7xQYXK0vOoz6jq6R9WXh0pg.woff2",
+    "file": "Montserrat-400-italic-latin.woff2"
+  },
+  {
+    "family": "Montserrat",
+    "weight": "400",
+    "style": "normal",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wdhyzbi.woff2",
+    "file": "Montserrat-400-normal-latin-ext.woff2"
+  },
+  {
+    "family": "Montserrat",
+    "weight": "400",
+    "style": "normal",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2",
+    "file": "Montserrat-400-normal-latin.woff2"
+  },
+  {
+    "family": "Montserrat",
+    "weight": "500",
+    "style": "normal",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wdhyzbi.woff2",
+    "file": "Montserrat-500-normal-latin-ext.woff2"
+  },
+  {
+    "family": "Montserrat",
+    "weight": "500",
+    "style": "normal",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2",
+    "file": "Montserrat-500-normal-latin.woff2"
+  },
+  {
+    "family": "Montserrat",
+    "weight": "600",
+    "style": "normal",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wdhyzbi.woff2",
+    "file": "Montserrat-600-normal-latin-ext.woff2"
+  },
+  {
+    "family": "Montserrat",
+    "weight": "600",
+    "style": "normal",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2",
+    "file": "Montserrat-600-normal-latin.woff2"
+  },
+  {
+    "family": "Montserrat",
+    "weight": "700",
+    "style": "normal",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wdhyzbi.woff2",
+    "file": "Montserrat-700-normal-latin-ext.woff2"
+  },
+  {
+    "family": "Montserrat",
+    "weight": "700",
+    "style": "normal",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2",
+    "file": "Montserrat-700-normal-latin.woff2"
+  }
+]

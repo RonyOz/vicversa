@@ -1,0 +1,28 @@
+{
+  "name": "vicversa",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Single source of truth for CV data. Renders pixel-controlled one-page PDFs from a versioned YAML catalog.",
+  "scripts": {
+    "cv": "tsx src/cli.ts",
+    "render": "tsx src/cli.ts render",
+    "validate": "tsx src/cli.ts validate",
+    "fonts": "tsx scripts/fetch-fonts.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "playwright": "^1.56.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "yaml": "^2.8.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
