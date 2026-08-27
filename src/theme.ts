@@ -13,7 +13,7 @@ export const Theme = z.object({
     size: z.object({
       name: z.number(), contact: z.number(), summary: z.number(), section: z.number(),
       body: z.number(), itemTitle: z.number(), skillLabel: z.number(),
-      skillValue: z.number(), arrow: z.number(),
+      skillValue: z.number(), honor: z.number(),
     }),
     lineHeight: z.object({ body: z.number(), heading: z.number() }),
   }),
@@ -24,11 +24,12 @@ export const Theme = z.object({
     afterName: z.number(), contactToRule: z.number(), afterHeaderBlock: z.number(),
   }),
   rule: z.object({ header: z.number(), section: z.number() }),
+  honor: z.object({ separator: z.string() }),
   bullet: z.object({
     indent: z.number(), markerInset: z.number(), markerSize: z.number(), markerTop: z.number(),
   }),
   skills: z.object({
-    labelWidth: z.number(), arrowGap: z.number(), arrow: z.string(),
+    labelWidth: z.number(), labelSuffix: z.string(),
     separator: z.string(), detailSeparator: z.string(),
   }),
   text: z.object({ align: z.string(), hyphens: z.boolean() }),
@@ -83,7 +84,7 @@ export function themeToCssVars(theme: Theme): string {
     "size-item-title": pt(theme.type.size.itemTitle),
     "size-skill-label": pt(theme.type.size.skillLabel),
     "size-skill-value": pt(theme.type.size.skillValue),
-    "size-arrow": pt(theme.type.size.arrow),
+    "size-honor": pt(theme.type.size.honor),
 
     "lh-body": String(theme.type.lineHeight.body),
     "lh-heading": String(theme.type.lineHeight.heading),
@@ -109,7 +110,6 @@ export function themeToCssVars(theme: Theme): string {
     "bullet-marker-top": pt(theme.bullet.markerTop),
 
     "skills-label-width": pt(theme.skills.labelWidth),
-    "skills-arrow-gap": pt(theme.skills.arrowGap),
 
     "text-align": theme.text.align,
     "text-hyphens": theme.text.hyphens ? "auto" : "manual",

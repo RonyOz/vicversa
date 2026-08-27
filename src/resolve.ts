@@ -22,7 +22,16 @@ export type ResolvedSection =
       kind: "education";
       id: SectionId;
       title: string;
-      entries: { id: string; org: string; program: string; graduation?: string; semester?: string; gpa?: string; range: string }[];
+      entries: {
+        id: string;
+        org: string;
+        program: string;
+        graduation?: string;
+        semester?: string;
+        gpa?: string;
+        honors: string[];
+        range: string;
+      }[];
     };
 
 export type ResolvedDocument = {
@@ -198,6 +207,15 @@ export function resolveDocument(app: Application, catalog: LoadedCatalog): Resol
           }),
           warnings,
         );
+
+        // Certifications read newest first regardless of how the application
+        // listed them. Unlike projects and experience - where the order is an
+        // editorial choice about what to lead with - a credential list has one
+        // correct order, so the renderer enforces it instead of asking every
+        // application to remember. "YYYY-MM" sorts lexicographically.
+        const date = (itemId: string) => catalog.byId.certifications.get(itemId)!.date;
+        items.sort((a, b) => date(b.id).localeCompare(date(a.id)));
+
         return { kind: "items", id, title, items };
       }
 
@@ -212,6 +230,7 @@ export function resolveDocument(app: Application, catalog: LoadedCatalog): Resol
             graduation: edu.graduation ? `${label("graduation")}: ${formatMonth(edu.graduation, lang)}` : undefined,
             semester: edu.semester ? `${ordinal(edu.semester, lang)} ${label("semester")}` : undefined,
             gpa: edu.gpa ? `${label("gpa")}: ${t(edu.gpa)}` : undefined,
+            honors: edu.honors.map(t),
             range: formatRange(edu.start, edu.end, lang, label("present")),
           };
         });

@@ -60,8 +60,10 @@ function SectionBody({ section, theme }: { section: ResolvedSection; theme: Them
         <>
           {section.rows.map((row, i) => (
             <div className="skill-row" key={i}>
-              <span className="skill-row__label">{row.label}</span>
-              <span className="skill-row__arrow">{theme.skills.arrow}</span>
+              <span className="skill-row__label">
+                {row.label}
+                {theme.skills.labelSuffix}
+              </span>
               <span className="skill-row__value">
                 <SkillValue items={row.items} theme={theme} />
               </span>
@@ -92,7 +94,25 @@ function SectionBody({ section, theme }: { section: ResolvedSection; theme: Them
                   {entry.gpa && <span className="edu__gpa">{entry.gpa}</span>}
                 </div>
               )}
-              <div className="edu__range">{entry.range}</div>
+              {/*
+                Distinctions share the date line rather than claiming one of
+                their own. That line is short and its right half is empty, so
+                this costs no page height - which on a one-page CV is the only
+                budget that matters.
+              */}
+              <div className="edu__row">
+                <span className="edu__range">{entry.range}</span>
+                {entry.honors.length > 0 && (
+                  <span className="edu__honors">
+                    {entry.honors.map((honor, i) => (
+                      <Fragment key={honor}>
+                        {i > 0 && theme.honor.separator}
+                        {honor}
+                      </Fragment>
+                    ))}
+                  </span>
+                )}
+              </div>
             </div>
           ))}
         </>

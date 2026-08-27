@@ -70,6 +70,12 @@ export const Education = z.object({
   semester: z.number().int().positive().optional(),
   /** Kept per language because the grading scale itself differs by audience. */
   gpa: Localized.optional(),
+  /**
+   * Distinctions earned during the programme, rendered as inline labels under
+   * the entry. A list rather than one string so each badge stays an editable
+   * unit - dropping one to reclaim a line shouldn't mean rewriting a sentence.
+   */
+  honors: z.array(Localized).default([]),
 });
 export type Education = z.infer<typeof Education>;
 

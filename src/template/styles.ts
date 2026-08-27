@@ -188,22 +188,20 @@ body {
 
 /* ---------- skills ---------- */
 
+/*
+ * Two columns, not three. The label column is fixed so every value starts at
+ * the same x - that alignment is what makes three rows read as one table,
+ * and it was the arrow's real job. The colon rides with the label.
+ */
 .skill-row {
   display: grid;
-  grid-template-columns: var(--skills-label-width) auto 1fr;
+  grid-template-columns: var(--skills-label-width) 1fr;
   align-items: baseline;
 }
 
 .skill-row + .skill-row { margin-top: var(--space-skill-row); }
 
 .skill-row__label { font-size: var(--size-skill-label); }
-
-.skill-row__arrow {
-  font-size: var(--size-arrow);
-  padding-right: var(--skills-arrow-gap);
-  /* Montserrat has no U+27AF; a serif face supplies it, as in the original. */
-  font-family: "Montserrat", "FreeSerif", serif;
-}
 
 .skill-row__value {
   font-family: var(--font-mono);
@@ -239,5 +237,18 @@ body {
 .edu__graduation { font-weight: var(--weight-semibold); white-space: nowrap; }
 .edu__gpa { white-space: nowrap; }
 .edu__range { color: var(--color-muted); }
+
+/*
+ * Distinctions ride the right end of the date line, so they cost no height,
+ * and they borrow that line's own treatment - muted, italic, a step down in
+ * size. That subordinates them to the degree and the GPA, which is the right
+ * reading order: they qualify the entry rather than announcing themselves.
+ */
+.edu__honors {
+  color: var(--color-muted);
+  font-size: var(--size-honor);
+  font-style: italic;
+  text-align: right;
+}
 `.trim();
 }
