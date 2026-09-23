@@ -40,6 +40,7 @@ body {
 }
 
 .page {
+  position: relative;
   width: var(--page-width);
   height: var(--page-height);
   padding: var(--margin-top) var(--margin-right) var(--margin-bottom) var(--margin-left);
