@@ -202,6 +202,23 @@ Selection rules:
   ship products on my own") — never as first-person wishes or pleading
   ("quiero", "espero poder", "I want to truly...", "I hope to contribute").
   Confidence over supplication, same bar as the technical claims.
+- **Summary is the profile, not a digest of the page.** Write it in the
+  voice of the baselines (`ux_architecture`, `fullstack_cloud`): who the
+  candidate is, their broad foundation, what motivates them, and how they
+  work — tuned to the posting's angle. Read the draft against the whole
+  rendered CV, not against the posting alone, and cut:
+  - **Stack lists that repeat the skills section** right below it. Naming a
+    broad foundation ("backend and frontend", "Java and Python") is fine; a
+    tool-by-tool inventory is the skills section's job.
+  - **Anchoring on one project or bullet** that already appears further down
+    ("I have built a fintech product..."). The profile is bigger than any
+    single project; evidence lives in the bullets.
+  - **Stitched claims** that merge facts from different projects into one
+    sentence and imply something no single project backs (e.g. "Python
+    services deployed on Kubernetes" when only the Java project ran on EKS).
+  The one exception: a posting hard requirement that has no other home on
+  the page (e.g. daily Claude/LLM use) belongs in the summary, stated
+  plainly.
 - **Skills-row consistency:** before presenting a row, check it has one naming
   axis (either "one chip per broad language/family with tools as `detail`", or
   "one chip per specific tool") and no technology named twice across two chips
@@ -290,6 +307,7 @@ manually. On changes → return to the affected phase, apply, regenerate
 | Picky selection from external examples | Related applications in `applications/` are the primary reference; keep external refs for wording only. |
 | CV has every skill group "for coverage" (looks like the general CV, not this posting) | Default is exclusion — cut anything without a text citation or named implication (see F1). |
 | Summary carried over from another application untouched | Tag match ≠ fit; reread it against this posting's actual emphasis before reusing (see F3 Summary rule). |
+| New summary reads as a recap of the skills row and the top project | Summary is the profile (baseline voice), not a digest — no stack inventory, no single-project anchor, no stitched claims (see F3). |
 | You explained a choice by citing "F2" / "Gate G1" / this skill | Talk like a recruiter, not a process (see Voice) — restate the reason in plain terms. |
 | Updating an app, you called the inherited selections "already fine" | The exclusion check applies to old content too (see Creating vs updating) — audit it, don't grandfather it. |
 | You asked "want A or B?" on a call both options defend | That's a judgment call, not a gate — decide and say why (see Judgment calls). |
