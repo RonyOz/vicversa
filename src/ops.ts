@@ -1,0 +1,284 @@
+import { mkdir, readdir, writeFile } from "node:fs/promises";
+import { basename, resolve } from "node:path";
+import { loadApplication, loadCatalog, ROOT } from "./catalog.js";
+import { buildHtml } from "./html.js";
+import { pick } from "./i18n.js";
+import { renderPdf, withSharedBrowser } from "./render.js";
+import { resolveDocument } from "./resolve.js";
+import type { Application, Language, Stage, TrackingEvent } from "./schema.js";
+import { recordEvent } from "./tracking-file.js";
+import {
+  funnel, pace, parseStage, summarize, timeline,
+  type Funnel, type Pace, type State, type TrackSummary,
+} from "./tracking.js";
+import { assess, verdict, type Assessment } from "./validate.js";
+
+/**
+ * Every operation vicversa offers, returning data. The CLI prints it and the
+ * MCP server returns it; neither adds logic. Nothing here writes to stdout,
+ * because over stdio stdout belongs to the MCP protocol.
+ */
+
+export const DEFAULT_STALE_DAYS = 21;
+export const DEFAULT_WEEKS = 8;
+export const OUT_DIR = resolve(ROOT, "out");
+const APPLICATIONS_DIR = resolve(ROOT, "applications");
+
+/**
+ * Chromium work runs one at a time. withSharedBrowser keeps a module-level
+ * browser, so two overlapping MCP calls would otherwise close it under each other.
+ */
+let queue: Promise<unknown> = Promise.resolve();
+function exclusive<T>(fn: () => Promise<T>): Promise<T> {
+  const run = queue.then(fn, fn);
+  queue = run.catch(() => undefined);
+  return run;
+}
+
+export async function applicationNames(): Promise<string[]> {
+  const files = await readdir(APPLICATIONS_DIR);
+  return files.filter((f) => f.endsWith(".yaml")).map((f) => basename(f, ".yaml")).sort();
+}
+
+/** Exact name, or an error that suggests names containing what was typed. */
+export async function findApplication(input: string): Promise<string> {
+  const wanted = basename(input, ".yaml");
+  const names = await applicationNames();
+  if (names.includes(wanted)) return wanted;
+  const close = names.filter((name) => name.includes(wanted.toLowerCase()));
+  throw new Error(
+    `No application "${wanted}".${close.length > 0 ? ` Did you mean: ${close.join(", ")}?` : ""}`,
+  );
+}
+
+export function applicationPath(name: string): string {
+  return resolve(APPLICATIONS_DIR, `${name}.yaml`);
+}
+
+/** A name from applications/, or (CLI only) a path to a YAML file elsewhere. */
+async function openApplication(input: string): Promise<{ name: string; app: Application }> {
+  if (input.includes("/")) return { name: basename(input, ".yaml"), app: await loadApplication(input) };
+  const name = await findApplication(input);
+  return { name, app: await loadApplication(name) };
+}
+
+export interface ApplicationListing {
+  name: string;
+  company: string | null;
+  role: string | null;
+  language: Language;
+  /** False for templates and unsent drafts. */
+  tracked: boolean;
+  state: State | null;
+  stage: Stage | null;
+  daysSince: number | null;
+}
+
+export async function listApplications(options: {
+  query?: string;
+  today: string;
+  staleDays?: number;
+}): Promise<ApplicationListing[]> {
+  const query = options.query?.toLowerCase();
+  const listings: ApplicationListing[] = [];
+  for (const name of await applicationNames()) {
+    const app = await loadApplication(name);
+    const { company, role, language } = app.metadata;
+    if (query && ![name, company ?? "", role ?? ""].some((text) => text.toLowerCase().includes(query))) continue;
+    const summary = summarize(name, app, options.today, options.staleDays ?? DEFAULT_STALE_DAYS);
+    listings.push({
+      name, company: company ?? null, role: role ?? null, language,
+      tracked: summary !== null,
+      state: summary?.state ?? null,
+      stage: summary?.stage ?? null,
+      daysSince: summary?.daysSince ?? null,
+    });
+  }
+  return listings;
+}
+
+export async function getApplication(
+  input: string,
+  options: { today: string; staleDays?: number },
+): Promise<{
+  name: string;
+  path: string;
+  application: Application;
+  timeline: TrackingEvent[] | null;
+  summary: TrackSummary | null;
+}> {
+  const name = await findApplication(input);
+  const application = await loadApplication(name);
+  return {
+    name,
+    path: applicationPath(name),
+    application,
+    timeline: timeline(application),
+    summary: summarize(name, application, options.today, options.staleDays ?? DEFAULT_STALE_DAYS),
+  };
+}
+
+export const CATALOG_PARTS = [
+  "profile", "summaries", "sections", "experiences", "projects", "certifications", "education", "skills",
+] as const;
+export type CatalogPart = (typeof CATALOG_PARTS)[number];
+
+const isLocalized = (value: object): value is { es?: string; en?: string } => {
+  const entries = Object.entries(value);
+  return (
+    entries.length > 0 &&
+    entries.every(([key, text]) => (key === "es" || key === "en") && typeof text === "string")
+  );
+};
+
+/** Replaces every bilingual {es, en} leaf with one language's text; leaves the rest alone. */
+function inLanguage(value: unknown, language: Language): unknown {
+  if (Array.isArray(value)) return value.map((item) => inLanguage(item, language));
+  if (value === null || typeof value !== "object") return value;
+  if (isLocalized(value)) return pick(value, language);
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, inLanguage(item, language)]));
+}
+
+/** The catalog is ~100 KB; asking for parts (and one language) keeps an agent's context small. */
+export async function getCatalog(
+  parts: readonly CatalogPart[],
+  language?: Language,
+): Promise<Partial<Record<CatalogPart, unknown>>> {
+  const catalog = await loadCatalog();
+  const all: Record<CatalogPart, unknown> = {
+    profile: catalog.profile,
+    summaries: catalog.summaries,
+    sections: catalog.sections,
+    experiences: catalog.experiences,
+    projects: catalog.projects,
+    certifications: catalog.certifications,
+    education: catalog.education,
+    skills: { skills: catalog.skills, groups: catalog.skillGroups },
+  };
+  const result: Partial<Record<CatalogPart, unknown>> = {};
+  for (const part of parts) result[part] = language ? inLanguage(all[part], language) : all[part];
+  return result;
+}
+
+export interface Status {
+  today: string;
+  staleDays: number;
+  pace: Pace;
+  funnel: Funnel;
+  /** Tracked applications, most recently moved first. */
+  applications: TrackSummary[];
+}
+
+export async function getStatus(options: { today: string; staleDays?: number; weeks?: number }): Promise<Status> {
+  const staleDays = options.staleDays ?? DEFAULT_STALE_DAYS;
+  const timelines: TrackingEvent[][] = [];
+  const applications: TrackSummary[] = [];
+  for (const name of await applicationNames()) {
+    const app = await loadApplication(name);
+    const events = timeline(app);
+    const summary = summarize(name, app, options.today, staleDays);
+    if (!events || !summary) continue;
+    timelines.push(events);
+    applications.push(summary);
+  }
+  applications.sort((a, b) => a.daysSince - b.daysSince);
+  return {
+    today: options.today,
+    staleDays,
+    pace: pace(timelines, options.today, options.weeks ?? DEFAULT_WEEKS),
+    funnel: funnel(timelines, options.today, staleDays),
+    applications,
+  };
+}
+
+export interface ValidationEntry {
+  name: string;
+  ok: boolean;
+  /** Set when the application could not be loaded or resolved at all. */
+  error?: string;
+  /** The CLI's human-readable report. */
+  report?: string;
+  assessment?: Assessment;
+}
+
+/** Every application (or the ones named) measured in one shared browser. One bad file never stops the batch. */
+export async function validateApplications(names?: readonly string[]): Promise<ValidationEntry[]> {
+  const targets = names && names.length > 0 ? [...names] : await applicationNames();
+  const catalog = await loadCatalog();
+  return exclusive(() =>
+    withSharedBrowser(async (render) => {
+      const results: ValidationEntry[] = [];
+      for (const input of targets) {
+        const fallbackName = basename(input, ".yaml");
+        try {
+          const { name, app } = await openApplication(input);
+          const doc = resolveDocument(app, catalog);
+          const html = await buildHtml(doc, catalog.theme);
+          const { measurement } = await render(html, catalog.theme);
+          const assessment = assess(doc, measurement, catalog.theme);
+          const { report } = verdict(name, doc, measurement, catalog.theme);
+          results.push({ name, ok: assessment.ok, report, assessment });
+        } catch (error) {
+          results.push({ name: fallbackName, ok: false, error: error instanceof Error ? error.message : String(error) });
+        }
+      }
+      return results;
+    }),
+  );
+}
+
+export interface RenderOutcome {
+  name: string;
+  ok: boolean;
+  /** False when it does not fit and `force` was not set: nothing is written. */
+  written: boolean;
+  pdfPath?: string;
+  htmlPath?: string;
+  report: string;
+  assessment: Assessment;
+}
+
+export async function renderApplication(
+  input: string,
+  options: { force?: boolean; html?: boolean; out?: string } = {},
+): Promise<RenderOutcome> {
+  const { name, app } = await openApplication(input);
+  const catalog = await loadCatalog();
+  const doc = resolveDocument(app, catalog);
+  const html = await buildHtml(doc, catalog.theme);
+
+  await mkdir(OUT_DIR, { recursive: true });
+  let htmlPath: string | undefined;
+  if (options.html) {
+    htmlPath = resolve(OUT_DIR, `${name}.html`);
+    await writeFile(htmlPath, html);
+  }
+
+  const { pdf, measurement } = await exclusive(() => renderPdf(html, catalog.theme));
+  const assessment = assess(doc, measurement, catalog.theme);
+  const { report } = verdict(name, doc, measurement, catalog.theme);
+  const outcome: RenderOutcome = { name, ok: assessment.ok, written: false, report, assessment };
+  if (htmlPath) outcome.htmlPath = htmlPath;
+  if (!assessment.ok && !options.force) return outcome;
+
+  const pdfPath = options.out ? resolve(process.cwd(), options.out) : resolve(OUT_DIR, `${name}.pdf`);
+  await writeFile(pdfPath, pdf);
+  return { ...outcome, written: true, pdfPath };
+}
+
+export async function trackEvent(
+  input: string,
+  options: { stage: string; date?: string; note?: string },
+  today: string,
+): Promise<{ name: string; event: TrackingEvent; events: TrackingEvent[]; summary: TrackSummary | null }> {
+  const stage = parseStage(options.stage);
+  const name = await findApplication(input);
+  const event: TrackingEvent = {
+    date: options.date ?? today,
+    stage,
+    ...(options.note !== undefined && options.note !== "" ? { note: options.note } : {}),
+  };
+  const events = await recordEvent(applicationPath(name), event, today);
+  const summary = summarize(name, await loadApplication(name), today, DEFAULT_STALE_DAYS);
+  return { name, event, events, summary };
+}
