@@ -20,7 +20,7 @@ export const Labels = z.object({
 export type Labels = z.infer<typeof Labels>;
 
 /** Turns a Zod failure into something you can act on without reading a stack trace. */
-function formatIssues(file: string, error: z.ZodError): string {
+export function formatIssues(file: string, error: z.ZodError): string {
   const lines = error.issues.map((issue) => {
     const path = issue.path.length ? issue.path.join(".") : "(root)";
     return `  ${path}: ${issue.message}`;
