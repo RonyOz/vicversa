@@ -24,6 +24,10 @@ pnpm cv list                        # what's in the catalog
 pnpm cv render baseline-es          # build one PDF into out/
 pnpm cv render baseline-es --html   # also dump the HTML, for DevTools
 pnpm cv validate                    # check every application fits on a page
+pnpm cv status                      # pace, response funnel, every application by state
+pnpm cv status <application>        # one application's timeline
+pnpm cv track <application> interview --note "RH"   # record what happened (date defaults to today)
+pnpm test                           # unit tests
 ```
 
 `render` writes nothing when the CV overflows. Pass `--force` to override.

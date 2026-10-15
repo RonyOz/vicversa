@@ -182,7 +182,14 @@ content:
     - <bullet ids in render order>
   education:
     - <education id>
+
+tracking:
+  - { date: "YYYY-MM-DD", stage: applied }   # same date as date_submitted
 ```
+
+If the CV is prepared but **not sent yet**, omit both `date_submitted` and
+`tracking`; the file then stays out of tracking until it is sent. Later events
+are recorded with the `cv-tracker` skill (`pnpm cv track`), never by hand.
 
 Selection rules:
 
