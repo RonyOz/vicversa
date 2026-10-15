@@ -84,6 +84,14 @@ test("every real application only gains lines at the end", () => {
     const text = readFileSync(resolve(dir, file), "utf8");
     const data = parse(text);
     const isTemplate = !data.tracking && !data.metadata.date_submitted;
+    const last = data.tracking?.at(-1);
+    if (last && ["hired", "rejected", "withdrawn"].includes(last.stage)) {
+      // Closed: a late event goes before the terminal one, inside the block.
+      const result = addEventToText(text, ev(data.tracking[0].date, "interview"), "2099-01-01", file);
+      const head = text.slice(0, text.indexOf("\ntracking:"));
+      assert.ok(result.text.startsWith(head), `${file} changed outside the tracking block`);
+      continue;
+    }
     const event = ev("2099-01-01", isTemplate ? "applied" : "interview");
     const result = addEventToText(text, event, "2099-01-01", file);
     assert.ok(result.text.startsWith(text), `${file} changed outside the tracking block`);
