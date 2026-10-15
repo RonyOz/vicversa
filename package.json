@@ -13,6 +13,7 @@
     "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
     "playwright": "^1.56.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
