@@ -143,6 +143,59 @@ export const SkillRow = z.object({
   label: Localized.optional(),
 });
 
+/** "YYYY-MM-DD", a local calendar date. */
+export const IsoDate = z
+  .string()
+  .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, 'expected "YYYY-MM-DD"');
+
+export const STAGES = ["applied", "assessment", "interview", "offer", "hired", "rejected", "withdrawn"] as const;
+export type Stage = (typeof STAGES)[number];
+
+/** A process is over once one of these is recorded, so it must be the last event. */
+export const TERMINAL_STAGES: readonly Stage[] = ["hired", "rejected", "withdrawn"];
+
+/** Events only the company can cause: any of them means the application got a response. */
+export const COMPANY_STAGES: readonly Stage[] = ["assessment", "interview", "offer", "hired", "rejected"];
+
+export const TrackingEvent = z.object({
+  date: IsoDate,
+  stage: z.enum(STAGES),
+  note: z.string().optional(),
+});
+export type TrackingEvent = z.infer<typeof TrackingEvent>;
+
+/**
+ * The two rules every timeline satisfies. Returned as a message instead of
+ * thrown so the schema and `cv track` report a broken timeline the same way.
+ */
+export function trackingProblem(events: readonly TrackingEvent[]): string | null {
+  for (let i = 1; i < events.length; i++) {
+    const previous = events[i - 1]!;
+    const current = events[i]!;
+    if (current.date < previous.date) {
+      return `events must be in date order: ${current.date} (${current.stage}) comes after ${previous.date} (${previous.stage})`;
+    }
+  }
+  const terminal = events.findIndex((event) => TERMINAL_STAGES.includes(event.stage));
+  if (terminal !== -1 && terminal !== events.length - 1) {
+    const event = events[terminal]!;
+    return `nothing can follow a terminal stage: ${event.stage} on ${event.date} is not the last event`;
+  }
+  return null;
+}
+
+/**
+ * The application's history: one event per line, oldest first. Status is
+ * never stored; it is derived from the last event (see src/tracking.ts).
+ */
+export const Tracking = z
+  .array(TrackingEvent)
+  .min(1, "tracking needs at least one event; remove the key instead")
+  .superRefine((events, ctx) => {
+    const problem = trackingProblem(events);
+    if (problem) ctx.addIssue({ code: "custom", message: problem });
+  });
+
 export const Application = z.object({
   metadata: z.object({
     company: z.string().optional(),
@@ -171,5 +224,7 @@ export const Application = z.object({
     certifications: z.array(Id).default([]),
     education: z.array(Id).default([]),
   }),
+  /** Optional. Without it, `metadata.date_submitted` implies one "applied" event. */
+  tracking: Tracking.optional(),
 });
 export type Application = z.infer<typeof Application>;

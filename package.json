@@ -9,7 +9,8 @@
     "render": "tsx src/cli.ts render",
     "validate": "tsx src/cli.ts validate",
     "fonts": "tsx scripts/fetch-fonts.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "playwright": "^1.56.0",
