@@ -87,3 +87,18 @@ test("trackEvent records into the file and returns the new state", async () => {
     rmSync(scratch, { force: true });
   }
 });
+
+test("parallel trackEvent calls on one file keep every event", async () => {
+  const scratch = join(APPS, "zz-ops-race.yaml");
+  copyFileSync(join(APPS, "2026-10-bluth-junior-python-developer.yaml"), scratch);
+  try {
+    await Promise.all([
+      trackEvent("zz-ops-race", { stage: "assessment", date: "2026-10-12" }, today),
+      trackEvent("zz-ops-race", { stage: "interview", date: "2026-10-13" }, today),
+    ]);
+    const { timeline } = await getApplication("zz-ops-race", { today });
+    assert.deepEqual(timeline?.map((e) => e.stage), ["applied", "assessment", "interview"]);
+  } finally {
+    rmSync(scratch, { force: true });
+  }
+});

@@ -24,16 +24,24 @@ export const DEFAULT_WEEKS = 8;
 export const OUT_DIR = resolve(ROOT, "out");
 const APPLICATIONS_DIR = resolve(ROOT, "applications");
 
-/**
- * Chromium work runs one at a time. withSharedBrowser keeps a module-level
- * browser, so two overlapping MCP calls would otherwise close it under each other.
- */
-let queue: Promise<unknown> = Promise.resolve();
-function exclusive<T>(fn: () => Promise<T>): Promise<T> {
-  const run = queue.then(fn, fn);
-  queue = run.catch(() => undefined);
-  return run;
+/** Runs the functions passed to it one at a time, in call order. */
+function serialQueue() {
+  let tail: Promise<unknown> = Promise.resolve();
+  return <T>(fn: () => Promise<T>): Promise<T> => {
+    const run = tail.then(fn, fn);
+    tail = run.catch(() => undefined);
+    return run;
+  };
 }
+
+/**
+ * MCP calls can overlap. Chromium work runs one at a time because
+ * withSharedBrowser keeps a module-level browser two calls would close under
+ * each other; file edits run one at a time because each is read-modify-write,
+ * and two at once would silently drop an event.
+ */
+const exclusive = serialQueue();
+const exclusiveWrite = serialQueue();
 
 export async function applicationNames(): Promise<string[]> {
   const files = await readdir(APPLICATIONS_DIR);
@@ -278,7 +286,9 @@ export async function trackEvent(
     stage,
     ...(options.note !== undefined && options.note !== "" ? { note: options.note } : {}),
   };
-  const events = await recordEvent(applicationPath(name), event, today);
-  const summary = summarize(name, await loadApplication(name), today, DEFAULT_STALE_DAYS);
+  const { events, summary } = await exclusiveWrite(async () => ({
+    events: await recordEvent(applicationPath(name), event, today),
+    summary: summarize(name, await loadApplication(name), today, DEFAULT_STALE_DAYS),
+  }));
   return { name, event, events, summary };
 }
