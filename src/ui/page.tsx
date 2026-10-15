@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { Dashboard } from "../ops.js";
 import { STAGES, type Stage, type TrackingEvent } from "../schema.js";
 import type { State } from "../tracking.js";
-import { funnelSegments, timeAxis, timelineGroups, type SegmentKey } from "./layout.js";
+import { calendarGrid, calendarLevel, funnelSegments, timeAxis, timelineGroups, type SegmentKey } from "./layout.js";
 import { styles } from "./styles.js";
 
 const SEGMENT_LABELS: Record<SegmentKey, string> = {
@@ -99,34 +99,65 @@ function FunnelCard({ data }: { data: Dashboard }) {
   );
 }
 
+const WEEKDAYS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+
 function PaceCard({ data }: { data: Dashboard }) {
-  const weeks = data.pace.weeks;
-  const max = Math.max(1, ...weeks.map((w) => w.count));
-  const top = Math.max(...weeks.map((w) => w.count));
-  const avgPct = (data.pace.average / max) * 100;
+  const grid = calendarGrid(data.rows.map((row) => row.events), data.today, data.pace.weeks.length);
+  const plural = (n: number) => `${n} aplicaci${n === 1 ? "ón" : "ones"}`;
   return (
     <section className="card">
       <h2>Ritmo</h2>
-      <p className="lede">Aplicaciones enviadas por semana (lunes a domingo). La última semana va en curso.</p>
-      <div className="pace" style={{ ["--weeks" as string]: weeks.length }}>
-        {weeks.map((w, i) => {
-          const current = i === weeks.length - 1;
-          const labelled = current || (w.count === top && top > 0);
-          return (
-            <div className="col" key={w.start} title={`Semana del ${short(w.start)}: ${w.count}`}>
-              <div className="val num">{labelled ? w.count : ""}</div>
-              <div className={`bar${current ? " current" : ""}`} style={{ height: `${(w.count / max) * 100 * 0.82}%` }} />
-            </div>
-          );
-        })}
-        {data.pace.average > 0 && (
-          <div className="avg" style={{ bottom: `${avgPct * 0.82}%` }}>
-            <span className="num">promedio {data.pace.average.toFixed(1)}</span>
-          </div>
-        )}
+      <p className="lede">
+        Cada celda es un día; color más intenso, más aplicaciones enviadas. Promedio{" "}
+        <span className="num">{data.pace.average.toFixed(1)}</span> por semana en las últimas {grid.weeks.length}.
+      </p>
+      <div className="cal-wrap">
+        <table className="cal">
+          <colgroup><col className="days" /></colgroup>
+          <thead>
+            <tr className="cal-months">
+              <th />
+              {grid.weeks.map((w) => <th key={w.start}>{w.month ?? ""}</th>)}
+            </tr>
+            <tr className="cal-ranges">
+              <th />
+              {grid.weeks.map((w) => <th key={w.start} className="num">{w.range}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {WEEKDAYS.map((weekday, d) => (
+              <tr key={weekday}>
+                <th scope="row">{weekday}</th>
+                {grid.weeks.map((w) => {
+                  const day = w.days[d]!;
+                  const label = `${weekday} ${short(day.date)}: ${day.future ? "aún no llega" : plural(day.count)}`;
+                  return (
+                    <td key={day.date}>
+                      <span
+                        className={`cell l${calendarLevel(day.count)}${day.today ? " today" : ""}${day.future ? " future" : ""}`}
+                        title={label}
+                        aria-label={label}
+                      >
+                        {day.count > 0 ? day.count : ""}
+                      </span>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th scope="row">total</th>
+              {grid.weeks.map((w) => <td key={w.start} className="num">{w.total}</td>)}
+            </tr>
+          </tfoot>
+        </table>
       </div>
-      <div className="pace-axis" style={{ ["--weeks" as string]: weeks.length }}>
-        {weeks.map((w) => <div key={w.start}>{short(w.start)}</div>)}
+      <div className="cal-legend">
+        menos
+        {[0, 1, 2, 3, 4].map((level) => <span key={level} className={`cell l${level}`} />)}
+        más <span className="sep">·</span> <span className="cell l0 today" /> hoy
       </div>
     </section>
   );

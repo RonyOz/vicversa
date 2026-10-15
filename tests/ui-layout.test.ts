@@ -46,3 +46,30 @@ test("timelineGroups: active, then no response, then closed; most recent movemen
     ["closed", ["b"]],
   ]);
 });
+
+test("calendarGrid: one column per week, Monday first, daily applied counts", async () => {
+  const { calendarGrid } = await import("../src/ui/layout.js");
+  const grid = calendarGrid(
+    [
+      [ev("2026-09-22", "applied"), ev("2026-09-25", "interview")],
+      [ev("2026-09-22", "applied")],
+      [ev("2026-10-13", "applied")],
+    ],
+    "2026-10-14",
+    4,
+  );
+  assert.deepEqual(grid.weeks.map((w) => w.range), ["21–27", "28–4", "5–11", "12–18"]);
+  assert.deepEqual(grid.weeks.map((w) => w.month), ["sep", "oct", null, null]);
+  assert.deepEqual(grid.weeks.map((w) => w.total), [2, 0, 0, 1]);
+  const tuesday = grid.weeks[0]!.days[1]!;
+  assert.deepEqual([tuesday.date, tuesday.count], ["2026-09-22", 2]);
+  const last = grid.weeks[3]!.days;
+  assert.equal(last[2]!.today, true); // Wed 14 oct
+  assert.equal(last[3]!.future, true); // Thu 15 oct
+  assert.equal(grid.max, 2);
+});
+
+test("calendarLevel buckets counts into 0–4", async () => {
+  const { calendarLevel } = await import("../src/ui/layout.js");
+  assert.deepEqual([0, 1, 2, 3, 4, 5, 9].map(calendarLevel), [0, 1, 2, 3, 3, 4, 4]);
+});

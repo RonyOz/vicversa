@@ -1,4 +1,5 @@
-import { daysBetween, type Funnel, type State } from "../tracking.js";
+import type { TrackingEvent } from "../schema.js";
+import { daysBetween, weekStart, type Funnel, type State } from "../tracking.js";
 
 /** Pure geometry for the panel's charts: no React, no I/O, testable. */
 
@@ -69,4 +70,74 @@ export function timelineGroups<T extends { state: State; daysSince: number }>(
     state,
     rows: rows.filter((row) => row.state === state).sort((a, b) => a.daysSince - b.daysSince),
   })).filter((group) => group.rows.length > 0);
+}
+
+function addDays(date: string, days: number): string {
+  const [y, m, d] = date.split("-").map(Number) as [number, number, number];
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10);
+}
+
+export interface CalendarDay {
+  date: string;
+  count: number;
+  today: boolean;
+  future: boolean;
+}
+
+export interface CalendarWeek {
+  start: string;
+  /** Day numbers, e.g. "22–28" or "29–5" across a month change. */
+  range: string;
+  /** Month name on the first week and on weeks that contain the 1st, else null. */
+  month: string | null;
+  total: number;
+  /** Monday to Sunday. */
+  days: CalendarDay[];
+}
+
+/**
+ * "applied" events laid out as a calendar: one column per week (Monday
+ * first), one cell per day, so every count sits on a findable date.
+ */
+export function calendarGrid(
+  timelines: readonly (readonly TrackingEvent[])[],
+  today: string,
+  weeks: number,
+): { weeks: CalendarWeek[]; max: number } {
+  const counts = new Map<string, number>();
+  for (const events of timelines) {
+    for (const event of events) {
+      if (event.stage === "applied") counts.set(event.date, (counts.get(event.date) ?? 0) + 1);
+    }
+  }
+  const firstMonday = addDays(weekStart(today), -7 * (weeks - 1));
+  const result: CalendarWeek[] = [];
+  for (let w = 0; w < weeks; w++) {
+    const start = addDays(firstMonday, 7 * w);
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const date = addDays(start, i);
+      return { date, count: counts.get(date) ?? 0, today: date === today, future: date > today };
+    });
+    const end = days[6]!.date;
+    const hasFirst = days.find((day) => day.date.endsWith("-01"));
+    const monthOf = (date: string) => MONTHS[Number(date.slice(5, 7)) - 1]!;
+    result.push({
+      start,
+      range: `${Number(start.slice(8))}–${Number(end.slice(8))}`,
+      month: hasFirst ? monthOf(hasFirst.date) : w === 0 ? monthOf(start) : null,
+      total: days.reduce((sum, day) => sum + day.count, 0),
+      days,
+    });
+  }
+  const max = Math.max(0, ...result.flatMap((week) => week.days.map((day) => day.count)));
+  return { weeks: result, max };
+}
+
+/** Intensity step for a day's count: 0 none, 1, 2, 3–4, 5+. */
+export function calendarLevel(count: number): 0 | 1 | 2 | 3 | 4 {
+  if (count <= 0) return 0;
+  if (count === 1) return 1;
+  if (count === 2) return 2;
+  if (count <= 4) return 3;
+  return 4;
 }
