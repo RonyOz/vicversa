@@ -48,6 +48,22 @@ test("recording an event redirects back with a confirmation", async () => {
   }
 });
 
+test("a closed application can be reopened from the panel", async () => {
+  const scratch = join(APPS, "zz-ui-undo.yaml");
+  copyFileSync(join(APPS, "2026-10-bluth-junior-python-developer.yaml"), scratch);
+  try {
+    await post("/track", { name: "zz-ui-undo", stage: "rejected", date: "2026-10-12" });
+    const page = await (await fetch(base)).text();
+    assert.match(page, /reabrir/);
+    const response = await post("/undo", { name: "zz-ui-undo" });
+    assert.equal(response.status, 303);
+    assert.match(decodeURIComponent(response.headers.get("location") ?? ""), /ok=.*rechazo/);
+    assert.doesNotMatch(readFileSync(scratch, "utf8"), /stage: rejected/);
+  } finally {
+    rmSync(scratch, { force: true });
+  }
+});
+
 test("an invalid event redirects back with the error and writes nothing", async () => {
   const response = await post("/track", { name: "2026-10-monarch-ai-fullstack-student", stage: "interview", date: "2099-01-01" });
   assert.equal(response.status, 303);

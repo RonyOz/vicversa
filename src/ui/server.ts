@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type Server } from "node:http";
 import { fontFaceCss } from "../fonts.js";
-import { DEFAULT_STALE_DAYS, DEFAULT_WEEKS, getDashboard, trackEvent } from "../ops.js";
+import { DEFAULT_STALE_DAYS, DEFAULT_WEEKS, getDashboard, trackEvent, undoLastEvent } from "../ops.js";
+import { STAGE_LABELS } from "./page.js";
 import { localToday } from "../tracking.js";
 import { renderPage } from "./page.js";
 
@@ -45,6 +46,22 @@ export function createUiServer(options: { today?: () => string } = {}): Server {
           );
           const text = `${result.name}: ${result.event.stage} el ${result.event.date} registrado`;
           location = `/?ok=${encodeURIComponent(text)}#${encodeURIComponent(result.name)}`;
+        } catch (error) {
+          const text = error instanceof Error ? error.message : String(error);
+          location = `/?error=${encodeURIComponent(text)}#${encodeURIComponent(name)}`;
+        }
+        response.writeHead(303, { location });
+        response.end();
+        return;
+      }
+
+      if (request.method === "POST" && url.pathname === "/undo") {
+        const name = (await readForm(request)).get("name") ?? "";
+        let location: string;
+        try {
+          const { removed } = await undoLastEvent(name, today());
+          const text = `${name}: quitado «${STAGE_LABELS[removed.stage]} ${removed.date}»`;
+          location = `/?ok=${encodeURIComponent(text)}#${encodeURIComponent(name)}`;
         } catch (error) {
           const text = error instanceof Error ? error.message : String(error);
           location = `/?error=${encodeURIComponent(text)}#${encodeURIComponent(name)}`;

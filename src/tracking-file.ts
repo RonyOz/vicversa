@@ -76,6 +76,49 @@ export function addEventToText(
   return { text: next, events };
 }
 
+/**
+ * Returns `text` without its last recorded event: the undo for a mistaken
+ * `track` (e.g. reopening an application closed by error). Splices out one
+ * line, like addEventToText splices one in. The first "applied" event stays.
+ */
+export function removeLastEventFromText(
+  text: string,
+  file = "application",
+): { text: string; removed: TrackingEvent; events: TrackingEvent[] } {
+  const doc = parseDocument(text);
+  if (doc.errors.length > 0) throw new Error(`${file}: ${doc.errors[0]!.message}`);
+  const parsed = Application.safeParse(doc.toJS());
+  if (!parsed.success) throw new Error(formatIssues(file, parsed.error));
+
+  const current = parsed.data.tracking;
+  const node = doc.get("tracking", true);
+  if (!current || node === undefined) throw new Error(`${file}: nothing to undo, no events were recorded.`);
+  if (current.length < 2) throw new Error(`${file}: only the "applied" event is left; nothing to undo.`);
+  if (!isSeq(node) || node.flow || !node.items.every((item) => isMap(item) && item.flow && item.range)) {
+    throw new Error(`${file}: tracking entries must be one line each, like - { date: "…", stage: … }.`);
+  }
+
+  const last = node.items.at(-1) as { range: [number, number, number] };
+  const lineStart = text.lastIndexOf("\n", last.range[0] - 1) + 1;
+  const lineEnd = text.indexOf("\n", last.range[1]);
+  const next =
+    lineEnd === -1 ? text.slice(0, Math.max(0, lineStart - 1)) : text.slice(0, lineStart) + text.slice(lineEnd + 1);
+
+  const events = current.slice(0, -1);
+  const check = Application.safeParse(parse(next));
+  if (!check.success || !sameEvents(check.data.tracking ?? [], events)) {
+    throw new Error(`${file}: the edited file did not read back as expected; nothing was written.`);
+  }
+  return { text: next, removed: current.at(-1)!, events };
+}
+
+export async function removeLastEvent(path: string): Promise<{ removed: TrackingEvent; events: TrackingEvent[] }> {
+  const text = await readFile(path, "utf8");
+  const result = removeLastEventFromText(text, basename(path));
+  await writeFile(path, result.text);
+  return { removed: result.removed, events: result.events };
+}
+
 export async function recordEvent(path: string, event: TrackingEvent, today: string): Promise<TrackingEvent[]> {
   const text = await readFile(path, "utf8");
   const result = addEventToText(text, event, today, basename(path));

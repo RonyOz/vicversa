@@ -40,6 +40,15 @@ is not an event yet: say so and offer to record it when it happens.
 5. Confirm in one line from the tool's text. If it returns an error, relay it
    (future date, already closed, template) and what would fix it.
 
+## Fixing a mistake
+
+"La cerré por error", "no era rechazo", wrong date or stage: call
+`undo_last_event` with the application name. It removes only the **last**
+recorded event (the first `applied` is never removed); tell the user which
+event will go before calling. To fix it, undo and then `track` the right
+event. Older events than the last one: undo repeatedly, then re-record.
+The panel (`pnpm ui`) offers the same as "reabrir" / "deshacer".
+
 ## Reporting status
 
 Call `get_status` (or `get_application` for one timeline) and summarize from

@@ -13,7 +13,7 @@ const SEGMENT_LABELS: Record<SegmentKey, string> = {
   advanced: "Avanzaron",
 };
 
-const STAGE_LABELS: Record<Stage, string> = {
+export const STAGE_LABELS: Record<Stage, string> = {
   applied: "aplicada",
   assessment: "prueba",
   interview: "entrevista",
@@ -180,6 +180,19 @@ function TrackForm({ name, today }: { name: string; today: string }) {
   );
 }
 
+function UndoForm({ name, last, label }: { name: string; last: TrackingEvent; label: string }) {
+  return (
+    <details className="track-form">
+      <summary>{label}</summary>
+      <form method="post" action="/undo">
+        <input type="hidden" name="name" value={name} />
+        <span>{`¿Quitar «${STAGE_LABELS[last.stage]} ${short(last.date)}${last.note ? ` · ${last.note}` : ""}»?`}</span>
+        <button type="submit">Quitar</button>
+      </form>
+    </details>
+  );
+}
+
 function eventTitle(event: TrackingEvent) {
   return `${short(event.date)} · ${STAGE_LABELS[event.stage]}${event.note ? ` · ${event.note}` : ""}`;
 }
@@ -235,11 +248,15 @@ function TimelinesCard({ data }: { data: Dashboard }) {
                 <div className="meta">
                   <div className="sent" title={applied}>{`aplicada ${short(applied)}`}</div>
                   {row.state === "closed" ? (
-                    <div>{`${STAGE_LABELS[row.stage]} ${short(row.lastDate)} · ${daysBetween(applied, row.lastDate)}d`}</div>
+                    <div>
+                      {`${STAGE_LABELS[row.stage]} ${short(row.lastDate)} · ${daysBetween(applied, row.lastDate)}d`}
+                      <UndoForm name={row.name} last={row.events.at(-1)!} label="reabrir" />
+                    </div>
                   ) : (
                     <div>
                       <span className="days num">{row.daysSince}d</span> sin mov.
                       <TrackForm name={row.name} today={data.today} />
+                      {row.events.length > 1 && <UndoForm name={row.name} last={row.events.at(-1)!} label="deshacer" />}
                     </div>
                   )}
                 </div>

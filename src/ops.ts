@@ -6,7 +6,7 @@ import { pick } from "./i18n.js";
 import { renderPdf, withSharedBrowser } from "./render.js";
 import { resolveDocument } from "./resolve.js";
 import type { Application, Language, Stage, TrackingEvent } from "./schema.js";
-import { recordEvent } from "./tracking-file.js";
+import { recordEvent, removeLastEvent } from "./tracking-file.js";
 import {
   funnel, pace, parseStage, summarize, timeline,
   type Funnel, type Pace, type State, type TrackSummary,
@@ -302,4 +302,17 @@ export async function trackEvent(
     summary: summarize(name, await loadApplication(name), today, DEFAULT_STALE_DAYS),
   }));
   return { name, event, events, summary };
+}
+
+/** Removes the last recorded event: reopens a closed application or fixes a mistaken entry. */
+export async function undoLastEvent(
+  input: string,
+  today: string,
+): Promise<{ name: string; removed: TrackingEvent; events: TrackingEvent[]; summary: TrackSummary | null }> {
+  const name = await findApplication(input);
+  return exclusiveWrite(async () => {
+    const { removed, events } = await removeLastEvent(applicationPath(name));
+    const summary = summarize(name, await loadApplication(name), today, DEFAULT_STALE_DAYS);
+    return { name, removed, events, summary };
+  });
 }

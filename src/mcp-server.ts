@@ -3,7 +3,8 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import {
   CATALOG_PARTS, DEFAULT_STALE_DAYS, DEFAULT_WEEKS,
-  getApplication, getCatalog, getStatus, listApplications, renderApplication, trackEvent, validateApplications,
+  getApplication, getCatalog, getStatus, listApplications, renderApplication, trackEvent, undoLastEvent,
+  validateApplications,
 } from "./ops.js";
 import { LANGUAGES, STAGES } from "./schema.js";
 import { formatFunnel, formatPace, formatTable, formatTimeline } from "./tracking-report.js";
@@ -303,6 +304,33 @@ export function createServer(): McpServer {
         const result = await trackEvent(name, { stage, date, note }, localToday());
         const text =
           `✓ ${result.name}: ${result.event.stage} on ${result.event.date} ` +
+          `(${result.events.length} events, now ${result.summary?.state ?? "untracked"})`;
+        return { data: { ...result }, text };
+      }),
+  );
+
+  server.registerTool(
+    "undo_last_event",
+    {
+      title: "Undo last application event",
+      description:
+        "Removes the most recently recorded event of an application: reopens one closed by mistake, or " +
+        "fixes a wrong stage/date (undo, then track again). The first applied event is never removed. " +
+        "Confirm with the user which event will be removed before calling.",
+      inputSchema: { name: z.string() },
+      outputSchema: {
+        name: z.string(),
+        removed: TrackingEvent,
+        events: z.array(TrackingEvent),
+        summary: TrackSummary.nullable(),
+      },
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: false },
+    },
+    ({ name }) =>
+      run(async () => {
+        const result = await undoLastEvent(name, localToday());
+        const text =
+          `✓ ${result.name}: removed ${result.removed.stage} on ${result.removed.date} ` +
           `(${result.events.length} events, now ${result.summary?.state ?? "untracked"})`;
         return { data: { ...result }, text };
       }),

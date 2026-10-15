@@ -97,3 +97,19 @@ test("every real application only gains lines at the end", () => {
     assert.ok(result.text.startsWith(text), `${file} changed outside the tracking block`);
   }
 });
+
+test("removeLastEventFromText drops only the last line of the block", async () => {
+  const { removeLastEventFromText } = await import("../src/tracking-file.js");
+  const result = removeLastEventFromText(tracked);
+  assert.deepEqual(result.removed, { date: "2026-10-08", stage: "interview", note: "RH" });
+  assert.equal(result.text, tracked.replace('  - { date: "2026-10-08", stage: interview, note: "RH" }\n', ""));
+});
+
+test("removeLastEventFromText keeps the applied event and works without a final newline", async () => {
+  const { removeLastEventFromText } = await import("../src/tracking-file.js");
+  const noNewline = tracked.trimEnd();
+  const result = removeLastEventFromText(noNewline);
+  assert.equal(result.text, noNewline.slice(0, noNewline.lastIndexOf("\n")));
+  assert.throws(() => removeLastEventFromText(result.text), /only the "applied" event/);
+  assert.throws(() => removeLastEventFromText(header), /nothing to undo/);
+});

@@ -20,13 +20,14 @@ type Result = Awaited<ReturnType<typeof client.callTool>>;
 const text = (result: Result) => (result.content as { type: string; text: string }[]).map((c) => c.text).join("\n");
 const data = (result: Result) => result.structuredContent as Record<string, any>;
 
-test("exposes the seven tools with honest annotations", async () => {
+test("exposes every tool with honest annotations", async () => {
   const { tools } = await client.listTools();
   const byName = new Map(tools.map((tool) => [tool.name, tool]));
   assert.deepEqual(
     [...byName.keys()].sort(),
-    ["get_application", "get_catalog", "get_status", "list_applications", "render", "track", "validate"],
+    ["get_application", "get_catalog", "get_status", "list_applications", "render", "track", "undo_last_event", "validate"],
   );
+  assert.equal(byName.get("undo_last_event")!.annotations?.destructiveHint, true);
   for (const name of ["get_application", "get_catalog", "get_status", "list_applications", "validate"]) {
     assert.equal(byName.get(name)!.annotations?.readOnlyHint, true, name);
   }
@@ -87,6 +88,10 @@ test("track records an event on a scratch copy", async () => {
     const again = await client.callTool({ name: "track", arguments: { name: "zz-mcp-test", stage: "interview" } });
     assert.equal(again.isError, true);
     assert.match(text(again), /already closed: rejected on 2026-10-10/);
+    const undo = await client.callTool({ name: "undo_last_event", arguments: { name: "zz-mcp-test" } });
+    assert.notEqual(undo.isError, true, text(undo));
+    assert.equal(data(undo).removed.stage, "rejected");
+    assert.equal(data(undo).summary.state, "active");
   } finally {
     rmSync(scratch, { force: true });
   }

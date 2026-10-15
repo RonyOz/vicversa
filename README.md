@@ -63,6 +63,7 @@ repo. Tools:
 | `validate` | One-page fit per CV, with every cut priced cheapest first |
 | `render` | PDF into `out/`; writes nothing if it overflows unless `force` |
 | `track` | Record an event (`applied` … `rejected`, `withdrawn`) |
+| `undo_last_event` | Remove the last recorded event (reopen an application closed by mistake) |
 
 Both interfaces are thin layers over `src/ops.ts`, so they never disagree.
 

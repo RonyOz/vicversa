@@ -102,3 +102,18 @@ test("parallel trackEvent calls on one file keep every event", async () => {
     rmSync(scratch, { force: true });
   }
 });
+
+test("undoLastEvent reopens a closed application", async () => {
+  const { undoLastEvent } = await import("../src/ops.js");
+  const scratch = join(APPS, "zz-ops-undo.yaml");
+  copyFileSync(join(APPS, "2026-10-bluth-junior-python-developer.yaml"), scratch);
+  try {
+    await trackEvent("zz-ops-undo", { stage: "rejected", date: "2026-10-10" }, today);
+    const result = await undoLastEvent("zz-ops-undo", today);
+    assert.equal(result.removed.stage, "rejected");
+    assert.equal(result.summary?.state, "active");
+    assert.deepEqual(result.events.map((e) => e.stage), ["applied"]);
+  } finally {
+    rmSync(scratch, { force: true });
+  }
+});
