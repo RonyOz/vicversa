@@ -5,9 +5,13 @@ description: Use when the user reports news about a job application or asks how 
 
 # cv-tracker
 
-Records application events and reports status through the `cv` CLI.
-**Never edit `tracking` in a YAML by hand** — always `pnpm cv track`, which
+Records application events and reports status through the **vicversa MCP
+server** (tools `list_applications`, `get_application`, `track`,
+`get_status`). **Never edit `tracking` in a YAML by hand** — `track`
 validates and keeps the file's formatting byte for byte.
+
+If the MCP tools are not available in this client, use the CLI equivalents:
+`pnpm cv status [app]` and `pnpm cv track <app> <stage> [--date] [--note]`.
 
 ## Stages
 
@@ -26,26 +30,23 @@ is not an event yet: say so and offer to record it when it happens.
 
 ## Recording an event
 
-1. Identify the application. `ls applications/` and match company/role.
-   If more than one file matches (several Initech, Dunder Mifflin, Fabrikam…), ask which
-   one, listing the candidates with their role. Never guess.
+1. Identify the application: `list_applications` with `query` = company (or
+   role). If more than one matches (several Initech, Dunder Mifflin, Fabrikam…), ask
+   which one, listing name + role. Never guess.
 2. Map the message to a stage (table above) and to the date it **happened**
    (ask if "last Tuesday"-style dates are ambiguous; default is today).
-3. Keep any short detail as `--note` ("RH", "técnica con líder", "HackerRank").
-4. Run:
-   ```bash
-   pnpm cv track <application> <stage> [--date YYYY-MM-DD] [--note "..."]
-   ```
-5. Confirm in one line with what the command printed. If it fails, relay the
-   error (future date, already closed, template) and what would fix it.
+3. Keep any short detail as `note` ("RH", "técnica con líder", "HackerRank").
+4. Call `track` with `name`, `stage`, and `date` / `note` when known.
+5. Confirm in one line from the tool's text. If it returns an error, relay it
+   (future date, already closed, template) and what would fix it.
 
 ## Reporting status
 
-Run `pnpm cv status` (or `pnpm cv status <application>` for one timeline) and
-summarize from its numbers:
+Call `get_status` (or `get_application` for one timeline) and summarize from
+its numbers:
 
-- Lead with pace and the funnel **with denominators**: "31 enviadas: 18 aún en
-  espera, 9 sin respuesta, 3 respondieron (2 rechazos directos, 1 avanzó)".
+- Lead with pace and the funnel **with denominators**: "30 enviadas: 9 aún en
+  espera, 21 sin respuesta, 0 respondieron".
 - Never collapse waiting and silence into rejection. Do not say "te han
   rechazado en muchas" when most are waiting or unanswered.
 - No comparisons against market averages: there is no reliable data and it

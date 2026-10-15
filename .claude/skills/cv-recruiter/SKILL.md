@@ -67,10 +67,13 @@ flag — you're polling instead of recruiting.
   is derived from each bullet's owner. A bare item id (`northwind`) includes the
   header with no bullets. One list, not two.
 - **One-page budget:** A4 gives ~785.9pt ≈ 58 lines at 10pt/13.5pt. The CLI
-  refuses to build an overflowing CV; `pnpm cv validate` prices every exit
+  renderer refuses to build an overflowing CV; `validate` prices every exit
   (summary swaps cost content nothing; bullets are measured heights).
-- CLI: `pnpm cv render <app>` (add `--force` only to fight the one-page rule —
-  never), `pnpm cv validate [app...]`, `pnpm cv list`.
+- Tools: the **vicversa MCP server** — `get_catalog`, `list_applications`,
+  `get_application`, `validate`, `render` (`force` only to fight the one-page
+  rule — never). If MCP tools are unavailable, the CLI equivalents are
+  `pnpm cv list | validate [app...] | render <app>`. Writing the application
+  YAML is a plain file edit; there is no write tool.
 - Never touch `theme.yaml`, `src/`, or the YAML schema. Applications follow the
   existing repo conventions.
 
@@ -89,9 +92,11 @@ flag — you're polling instead of recruiting.
 
 ### F0 — Load context
 
-1. Read the whole catalog: `profile`, `summaries`, `sections`, `experiences`,
-   `projects`, `certifications`, `education`, `skills`, `labels`.
-2. Read every existing application in `applications/`.
+1. Read the catalog with `get_catalog`: parts `profile`, `summaries`,
+   `sections`, `experiences`, `projects`, `certifications`, `education`,
+   `skills`, with `language` set to the posting's language (halves the size).
+2. `list_applications` for every existing application; `get_application` on
+   the ones whose role is close to this posting.
 3. State in one line: company, role, detected language.
 
 ### F1 — Recruiter analysis
@@ -189,7 +194,7 @@ tracking:
 
 If the CV is prepared but **not sent yet**, omit both `date_submitted` and
 `tracking`; the file then stays out of tracking until it is sent. Later events
-are recorded with the `cv-tracker` skill (`pnpm cv track`), never by hand.
+are recorded with the `cv-tracker` skill (MCP `track`), never by hand.
 
 Selection rules:
 
@@ -245,10 +250,11 @@ Selection rules:
 
 ### F4 — Render and fit (automatic loop)
 
-1. `pnpm cv render <app>`.
-2. If it succeeds → proceed to F5.
-3. If it overflows → `pnpm cv validate <app>`, read the report (it prices
-   every cut cheapest-first), apply the **single cheapest fix** (summary swap
+1. `render` with the application name.
+2. If `written` is true → proceed to F5.
+3. If it overflows, read `assessment.cuts` (cheapest first, `enough` marks the
+   cuts that fix it alone; `smallestCut` is the cheapest sufficient one) and
+   apply the **single cheapest fix** (summary swap
    or dropping one bullet) by editing the application YAML, re-render.
 4. Repeat until it fits or **max 3 attempts**. If it still overflows, do NOT
    keep cutting silently: carry the validator report into G2 and let the user
@@ -287,7 +293,7 @@ manually. On changes → return to the affected phase, apply, regenerate
 ## Red flags — stop and fix
 
 - You wrote something to the catalog without G1 → **revert it**, then propose.
-- The final PDF does not pass `pnpm cv validate` → not done.
+- The final PDF does not pass `validate` → not done.
 - A bullet id you selected does not exist → re-check F3.
 - You are about to edit `theme.yaml` or the schema to "fit more" → **forbidden**;
   the cut must be content.
@@ -297,9 +303,9 @@ manually. On changes → return to the affected phase, apply, regenerate
 
 | Need | Command / source |
 |---|---|
-| See what exists | `pnpm cv list` |
-| Check if a CV fits one page | `pnpm cv validate [app...]` (no args = all) |
-| Build the PDF | `pnpm cv render <app>` (`--force` only to bypass one-page rule — never) |
+| See what exists | `list_applications`, `get_catalog` |
+| Check if a CV fits one page | `validate` (`names` optional; none = all) |
+| Build the PDF | `render` (`force` only to bypass one-page rule — never) |
 | Fix an overflow | Apply validator's single cheapest fix, re-render (max 3 tries, see F4) |
 | New posting, no close match in `applications/` | Base selection on `general-es`/`general-en` |
 | Editing an existing application | Load it, diff against F1 analysis, touch only the delta |

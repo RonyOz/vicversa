@@ -32,6 +32,30 @@ pnpm test                           # unit tests
 
 `render` writes nothing when the CV overflows. Pass `--force` to override.
 
+## MCP server (how agents use it)
+
+The CLI is the secondary interface. AI agents work through an MCP server that
+returns data instead of text to parse:
+
+```bash
+pnpm mcp                            # stdio server; clients start it for you
+```
+
+`.mcp.json` (Claude Code) and `opencode.json` (Opencode) register it for this
+repo. Tools:
+
+| Tool | Does |
+|---|---|
+| `list_applications` | Applications with company, role, tracking state; `query` filters |
+| `get_application` | One application parsed, with timeline, state and file path |
+| `get_catalog` | Catalog by `parts`, optionally reduced to one `language` |
+| `get_status` | Weekly pace, response funnel, applications by state |
+| `validate` | One-page fit per CV, with every cut priced cheapest first |
+| `render` | PDF into `out/`; writes nothing if it overflows unless `force` |
+| `track` | Record an event (`applied` … `rejected`, `withdrawn`) |
+
+Both interfaces are thin layers over `src/ops.ts`, so they never disagree.
+
 ## Adding an application
 
 Copy any file in `applications/`, then edit the selections. Selections are
