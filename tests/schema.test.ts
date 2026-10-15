@@ -48,3 +48,9 @@ test("rejects an empty list, a bad date and an unknown stage", () => {
 test("trackingProblem returns null for a valid timeline", () => {
   assert.equal(trackingProblem([{ date: "2026-10-01", stage: "applied" }]), null);
 });
+
+test("rejects dates that do not exist on the calendar", () => {
+  assert.equal(withTracking([{ date: "2026-09-31", stage: "applied" }]).success, false);
+  assert.equal(withTracking([{ date: "2026-02-29", stage: "applied" }]).success, false);
+  assert.equal(withTracking([{ date: "2028-02-29", stage: "applied" }]).success, true);
+});

@@ -146,7 +146,12 @@ export const SkillRow = z.object({
 /** "YYYY-MM-DD", a local calendar date. */
 export const IsoDate = z
   .string()
-  .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, 'expected "YYYY-MM-DD"');
+  .regex(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, 'expected "YYYY-MM-DD"')
+  .refine((date) => {
+    // Zod runs this even when the regex failed, so guard against Invalid Date.
+    const time = Date.parse(`${date}T00:00:00Z`);
+    return !Number.isNaN(time) && new Date(time).toISOString().startsWith(date);
+  }, "not a real calendar date");
 
 export const STAGES = ["applied", "assessment", "interview", "offer", "hired", "rejected", "withdrawn"] as const;
 export type Stage = (typeof STAGES)[number];
