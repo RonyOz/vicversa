@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "vicversa": {
+      "type": "stdio",
+      "command": "node_modules/.bin/tsx",
+      "args": ["src/mcp.ts"]
+    }
+  }
+}
