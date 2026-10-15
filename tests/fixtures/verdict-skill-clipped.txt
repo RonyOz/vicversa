@@ -1,0 +1,4 @@
+false
+✗ skill-clipped
+
+  Skill row overflows "DevOps" by 4.2pt — it will be clipped. Drop a skill or shorten a detail.

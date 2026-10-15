@@ -1,0 +1,20 @@
+false
+✗ way-over
+
+  Over by 200.0pt — about 14.8 body lines.
+  used 985.9pt, available 785.9pt
+
+  Where the height is:
+    experience        300.5pt
+    projects          250.0pt
+    skills            120.0pt
+
+  No single cut is enough — you need at least two.
+
+  Options, cheapest first:
+      bullet routewise.arch                     13.5pt  1 line
+      bullet andina_monitor.students         27.0pt  2 lines
+      bullet northwind.ddd                   40.5pt  3 lines
+      item   routewise                          90.5pt  whole entry, projects
+      item   northwind                      162.0pt  whole entry, experience
+  ! bullet "x" has no en text; fell back to another language

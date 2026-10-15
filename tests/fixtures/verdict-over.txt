@@ -1,0 +1,21 @@
+false
+✗ over
+
+  Over by 16.0pt — about 1.2 body lines.
+  used 801.9pt, available 785.9pt
+
+  Where the height is:
+    experience        300.5pt
+    projects          250.0pt
+    skills            120.0pt
+
+  Smallest single cut that fixes it: ux_architecture (summary, swap, no content lost, frees 27.0pt)
+
+  Options, cheapest first:
+      summary cloud_architect                13.5pt  swap, no content lost
+      bullet routewise.arch                     13.5pt  1 line
+    ✓ summary ux_architecture                27.0pt  swap, no content lost
+    ✓ bullet andina_monitor.students         27.0pt  2 lines
+    ✓ bullet northwind.ddd                   40.5pt  3 lines
+    ✓ item   routewise                          90.5pt  whole entry, projects
+    ✓ item   northwind                      162.0pt  whole entry, experience
