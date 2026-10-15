@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Dashboard } from "../ops.js";
 import { STAGES, type Stage, type TrackingEvent } from "../schema.js";
-import type { State } from "../tracking.js";
+import { daysBetween, type State } from "../tracking.js";
 import { calendarGrid, calendarLevel, funnelSegments, timeAxis, timelineGroups, type SegmentKey } from "./layout.js";
 import { styles } from "./styles.js";
 
@@ -210,6 +210,7 @@ function TimelinesCard({ data }: { data: Dashboard }) {
         <div className="tl-group" key={group.state}>
           <h3>{STATE_TITLES[group.state]} · {group.rows.length}</h3>
           {group.rows.map((row) => {
+            const applied = (row.events.find((e) => e.stage === "applied") ?? row.events[0]!).date;
             const start = axis.x(row.events[0]!.date);
             const end = axis.x(row.lastDate);
             return (
@@ -232,13 +233,14 @@ function TimelinesCard({ data }: { data: Dashboard }) {
                   ))}
                 </div>
                 <div className="meta">
+                  <div className="sent" title={applied}>{`aplicada ${short(applied)}`}</div>
                   {row.state === "closed" ? (
-                    <>{STAGE_LABELS[row.stage]} · {short(row.lastDate)}</>
+                    <div>{`${STAGE_LABELS[row.stage]} ${short(row.lastDate)} · ${daysBetween(applied, row.lastDate)}d`}</div>
                   ) : (
-                    <>
+                    <div>
                       <span className="days num">{row.daysSince}d</span> sin mov.
                       <TrackForm name={row.name} today={data.today} />
-                    </>
+                    </div>
                   )}
                 </div>
               </div>

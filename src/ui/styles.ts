@@ -166,6 +166,7 @@ section.card .lede { color: var(--ink-2); font-size: 13px; margin: 2px 0 16px; }
 .mark.withdrawn { background: var(--withdrawn); }
 .tl-row .meta { font-size: 12px; color: var(--ink-2); text-align: right; white-space: nowrap; }
 .tl-row .meta .days { color: var(--ink); }
+.tl-row .meta .sent { color: var(--ink); font-weight: 500; }
 
 details.track-form { display: inline; }
 details.track-form summary { display: inline; font-size: 12px; color: var(--muted); cursor: pointer; list-style: none; margin-left: 8px; text-decoration: underline dotted; text-underline-offset: 3px; }

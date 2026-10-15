@@ -27,6 +27,9 @@ test("the dashboard renders the funnel, pace and every tracked application", asy
   assert.match(html, /Ritmo/);
   assert.match(html, /2026-10-globex-desarrollador-sistemas-cuentas/);
   assert.doesNotMatch(html, /baseline-es/); // templates are not tracked
+  // Every row says when it was sent, so time can be measured from there.
+  assert.match(html, /aplicada 1 oct/); // Globex
+  assert.match(html, /aplicada 23 sep<\/div><div[^>]*>rechazo 14 oct · 21d/); // Initech SWE: whole process
 });
 
 test("recording an event redirects back with a confirmation", async () => {
