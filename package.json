@@ -10,8 +10,9 @@
     "validate": "tsx src/cli.ts validate",
     "fonts": "tsx scripts/fetch-fonts.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/*.test.ts",
-    "mcp": "tsx src/mcp.ts"
+    "test": "tsx --test --test-concurrency=1 tests/*.test.ts",
+    "mcp": "tsx src/mcp.ts",
+    "ui": "tsx src/ui/main.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",

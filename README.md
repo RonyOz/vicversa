@@ -32,6 +32,16 @@ pnpm test                           # unit tests
 
 `render` writes nothing when the CV overflows. Pass `--force` to override.
 
+## Tracking panel
+
+```bash
+pnpm ui                             # http://localhost:4747 (localhost only)
+```
+
+Pace, the response funnel and every application's timeline, with a form to
+record what happened. Server-rendered over `src/ops.ts`; no client JS, no
+database — the YAML files stay the source of truth.
+
 ## MCP server (how agents use it)
 
 The CLI is the secondary interface. AI agents work through an MCP server that

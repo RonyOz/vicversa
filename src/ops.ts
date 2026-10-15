@@ -178,24 +178,35 @@ export interface Status {
 }
 
 export async function getStatus(options: { today: string; staleDays?: number; weeks?: number }): Promise<Status> {
+  const { rows, ...status } = await getDashboard(options);
+  return status;
+}
+
+export interface Dashboard extends Status {
+  /** Each tracked application with its full timeline, same order as `applications`. */
+  rows: (TrackSummary & { events: TrackingEvent[] })[];
+}
+
+/** Status plus every timeline: what the panel draws. */
+export async function getDashboard(options: { today: string; staleDays?: number; weeks?: number }): Promise<Dashboard> {
   const staleDays = options.staleDays ?? DEFAULT_STALE_DAYS;
-  const timelines: TrackingEvent[][] = [];
-  const applications: TrackSummary[] = [];
+  const rows: Dashboard["rows"] = [];
   for (const name of await applicationNames()) {
     const app = await loadApplication(name);
     const events = timeline(app);
     const summary = summarize(name, app, options.today, staleDays);
     if (!events || !summary) continue;
-    timelines.push(events);
-    applications.push(summary);
+    rows.push({ ...summary, events });
   }
-  applications.sort((a, b) => a.daysSince - b.daysSince);
+  rows.sort((a, b) => a.daysSince - b.daysSince);
+  const timelines = rows.map((row) => row.events);
   return {
     today: options.today,
     staleDays,
     pace: pace(timelines, options.today, options.weeks ?? DEFAULT_WEEKS),
     funnel: funnel(timelines, options.today, staleDays),
-    applications,
+    applications: rows.map(({ events, ...summary }) => summary),
+    rows,
   };
 }
 
