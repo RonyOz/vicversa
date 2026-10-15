@@ -5,6 +5,10 @@ import { loadApplication, loadCatalog, ROOT } from "./catalog.js";
 import { buildHtml } from "./html.js";
 import { renderPdf, withSharedBrowser } from "./render.js";
 import { resolveDocument } from "./resolve.js";
+import type { TrackingEvent } from "./schema.js";
+import { recordEvent } from "./tracking-file.js";
+import { formatFunnel, formatPace, formatTable, formatTimeline } from "./tracking-report.js";
+import { funnel, localToday, pace, parseStage, summarize, timeline, type TrackSummary } from "./tracking.js";
 import { verdict } from "./validate.js";
 
 const OUT = resolve(ROOT, "out");
@@ -12,6 +16,88 @@ const OUT = resolve(ROOT, "out");
 async function applicationNames(): Promise<string[]> {
   const files = await readdir(resolve(ROOT, "applications"));
   return files.filter((f) => f.endsWith(".yaml")).map((f) => basename(f, ".yaml")).sort();
+}
+
+/** Exact name, or an error that suggests names containing what was typed. */
+async function findApplication(input: string): Promise<string> {
+  const wanted = basename(input, ".yaml");
+  const names = await applicationNames();
+  if (names.includes(wanted)) return wanted;
+  const close = names.filter((name) => name.includes(wanted.toLowerCase()));
+  throw new Error(
+    `No application "${wanted}".${close.length > 0 ? ` Did you mean: ${close.join(", ")}?` : ""}`,
+  );
+}
+
+function positiveInt(value: string, flag: string): number {
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < 1) throw new Error(`${flag} must be a positive integer, got "${value}"`);
+  return number;
+}
+
+async function cmdStatus(args: string[]) {
+  const { values, positionals } = parseArgs({
+    args,
+    options: {
+      "stale-days": { type: "string", default: "21" },
+      weeks: { type: "string", default: "8" },
+    },
+    allowPositionals: true,
+  });
+  const staleDays = positiveInt(values["stale-days"], "--stale-days");
+  const weeks = positiveInt(values.weeks, "--weeks");
+  const today = localToday();
+
+  if (positionals[0]) {
+    const name = await findApplication(positionals[0]);
+    const app = await loadApplication(name);
+    const events = timeline(app);
+    const summary = summarize(name, app, today, staleDays);
+    if (!events || !summary) {
+      console.log(`${name} is a template or unsent draft: not tracked.`);
+      return;
+    }
+    console.log(formatTimeline(summary, events));
+    return;
+  }
+
+  const timelines: TrackingEvent[][] = [];
+  const summaries: TrackSummary[] = [];
+  for (const name of await applicationNames()) {
+    const app = await loadApplication(name);
+    const events = timeline(app);
+    const summary = summarize(name, app, today, staleDays);
+    if (!events || !summary) continue;
+    timelines.push(events);
+    summaries.push(summary);
+  }
+  summaries.sort((a, b) => a.daysSince - b.daysSince);
+
+  console.log(formatPace(pace(timelines, today, weeks)));
+  console.log("");
+  console.log(formatFunnel(funnel(timelines, today, staleDays), staleDays));
+  console.log("");
+  console.log(formatTable(summaries));
+}
+
+async function cmdTrack(args: string[]) {
+  const { values, positionals } = parseArgs({
+    args,
+    options: { date: { type: "string" }, note: { type: "string" } },
+    allowPositionals: true,
+  });
+  const [input, stageArg] = positionals;
+  if (!input || !stageArg) {
+    throw new Error("Usage: cv track <application> <stage> [--date YYYY-MM-DD] [--note TEXT]");
+  }
+  const stage = parseStage(stageArg);
+  const name = await findApplication(input);
+  const today = localToday();
+  const event: TrackingEvent = { date: values.date ?? today, stage, ...(values.note ? { note: values.note } : {}) };
+
+  const events = await recordEvent(resolve(ROOT, "applications", `${name}.yaml`), event, today);
+  const summary = summarize(name, await loadApplication(name), today, 21);
+  console.log(`  ✓ ${name}: ${stage} on ${event.date} (${events.length} events, now ${summary?.state ?? "untracked"})`);
 }
 
 async function cmdRender(args: string[]) {
@@ -116,6 +202,10 @@ const USAGE = `vicversa - one catalog, many CVs
   cv render <application> [--out FILE] [--html] [--force]
   cv validate [application...]
   cv list
+  cv status [application] [--stale-days N] [--weeks W]
+  cv track <application> <stage> [--date YYYY-MM-DD] [--note TEXT]
+
+  stages: applied, assessment, interview, offer, hired, rejected, withdrawn
 `;
 
 async function main() {
@@ -125,6 +215,8 @@ async function main() {
     case "render": return cmdRender(rest);
     case "validate": return cmdValidate(rest);
     case "list": return cmdList();
+    case "status": return cmdStatus(rest);
+    case "track": return cmdTrack(rest);
     default:
       console.log(USAGE);
       if (command !== undefined && command !== "help") process.exitCode = 1;
