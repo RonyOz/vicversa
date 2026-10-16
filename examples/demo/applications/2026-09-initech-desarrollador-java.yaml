@@ -1,0 +1,38 @@
+# Fictional application to Initech (Desarrollador Java).
+metadata:
+  company: Initech
+  role: "Desarrollador Java"
+  url: https://jobs.example.com/2026-09-initech-desarrollador-java
+  date_submitted: "2026-09-22"
+  language: es
+
+content:
+  summary: backend_platform
+  contact: [email, phone, github, linkedin]
+  sections: [skills, experience, projects, education, certifications]
+
+  skills:
+    - group: languages
+      items: [java, typescript, python, sql]
+    - group: backend
+      items: [spring, node, fastapi]
+    - group: cloud
+      items: [aws, terraform, docker, gha]
+
+  experience:
+    - northwind.payments
+    - northwind.observability
+    - northwind.iac
+    - fabrikam.api
+    - andina_ta.students
+
+  projects:
+    - routewise.solver
+    - ledger.tests
+
+  education:
+    - andina
+
+  certifications:
+    - aws_ccp.scope
+    - psm1

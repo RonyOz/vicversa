@@ -21,10 +21,10 @@ const row = (name: string, extra: Partial<ListRow>): ListRow => ({
 });
 
 const rows: ListRow[] = [
-  row("initech-sre", { company: "Initech", role: "SRE Intern", state: "closed", stage: "rejected", daysSince: 1, applied: "2026-09-26", language: "en" }),
+  row("stark-sre", { company: "Stark", role: "SRE Intern", state: "closed", stage: "rejected", daysSince: 1, applied: "2026-09-26", language: "en" }),
   row("globex", { company: "Globex", role: "Desarrollador de Software", daysSince: 14, applied: "2026-10-01" }),
-  row("acme", { company: "Dunder Mifflin", role: "Backend Engineer", state: "stale", daysSince: 23, applied: "2026-09-22", language: "en" }),
-  row("hooli", { company: "Prestige", role: "Latin América Internship", stage: "interview", daysSince: 20, applied: "2026-08-27", language: "en" }),
+  row("acme", { company: "Acme", role: "Backend Engineer", state: "stale", daysSince: 23, applied: "2026-09-22", language: "en" }),
+  row("hooli", { company: "Hooli", role: "Latin América Internship", stage: "interview", daysSince: 20, applied: "2026-08-27", language: "en" }),
 ];
 
 test("parseQuery fills defaults and ignores junk", () => {
@@ -56,15 +56,15 @@ test("filters by tab, stage and language", () => {
   const base = parseQuery(new URLSearchParams(""));
   assert.deepEqual(applyQuery(rows, base).map((r) => r.name), ["globex", "hooli"]);
   assert.deepEqual(applyQuery(rows, { ...base, stage: "interview" }).map((r) => r.name), ["hooli"]);
-  assert.deepEqual(applyQuery(rows, { ...base, tab: "todas", language: "en" }).map((r) => r.name).sort(), ["acme", "hooli", "initech-sre"]);
+  assert.deepEqual(applyQuery(rows, { ...base, tab: "todas", language: "en" }).map((r) => r.name).sort(), ["acme", "hooli", "stark-sre"]);
 });
 
 test("sorts by recency, waiting time, application date or company", () => {
   const all = { ...parseQuery(new URLSearchParams("")), tab: "todas" as const };
-  assert.deepEqual(applyQuery(rows, all).map((r) => r.name), ["initech-sre", "globex", "hooli", "acme"]);
-  assert.deepEqual(applyQuery(rows, { ...all, sort: "dias" }).map((r) => r.name), ["acme", "hooli", "globex", "initech-sre"]);
-  assert.deepEqual(applyQuery(rows, { ...all, sort: "aplicada" }).map((r) => r.name), ["globex", "initech-sre", "acme", "hooli"]);
-  assert.deepEqual(applyQuery(rows, { ...all, sort: "empresa" }).map((r) => r.name), ["acme", "globex", "hooli", "initech-sre"]);
+  assert.deepEqual(applyQuery(rows, all).map((r) => r.name), ["stark-sre", "globex", "hooli", "acme"]);
+  assert.deepEqual(applyQuery(rows, { ...all, sort: "dias" }).map((r) => r.name), ["acme", "hooli", "globex", "stark-sre"]);
+  assert.deepEqual(applyQuery(rows, { ...all, sort: "aplicada" }).map((r) => r.name), ["globex", "stark-sre", "acme", "hooli"]);
+  assert.deepEqual(applyQuery(rows, { ...all, sort: "empresa" }).map((r) => r.name), ["acme", "globex", "hooli", "stark-sre"]);
 });
 
 test("monthMatrix: Monday-first weeks, padded with nulls", () => {

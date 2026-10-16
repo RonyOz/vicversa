@@ -19,18 +19,18 @@ const base: Measurement = {
   ],
   items: [
     { id: "northwind", section: "experience", height: 150, withGap: 162 },
-    { id: "routewise", section: "projects", height: 80, withGap: 90.5 },
+    { id: "ledger", section: "projects", height: 80, withGap: 90.5 },
   ],
   bullets: [
-    { id: "northwind.ddd", item: "northwind", height: 40.5, lines: 3 },
-    { id: "andina_monitor.students", item: "andina_monitor", height: 27, lines: 2 },
-    { id: "routewise.arch", item: "routewise", height: 13.5, lines: 1 },
+    { id: "northwind.payments", item: "northwind", height: 40.5, lines: 3 },
+    { id: "andina_ta.students", item: "andina_ta", height: 27, lines: 2 },
+    { id: "ledger.sync", item: "ledger", height: 13.5, lines: 1 },
   ],
   skillOverflows: [],
   summaries: [
-    { id: "distributed_ai", height: 54 },
-    { id: "cloud_architect", height: 40.5 },
-    { id: "ux_architecture", height: 27 },
+    { id: "backend_platform", height: 54 },
+    { id: "fullstack_product", height: 40.5 },
+    { id: "data_ml", height: 27 },
     { id: "same_height", height: 53.8 },
   ],
 };
@@ -42,10 +42,10 @@ export const wayOver: Measurement = { ...base, used: 985.9, overflow: 200 };
 export const skillClipped: Measurement = { ...fits, skillOverflows: [{ label: "DevOps", overflow: 4.2 }] };
 
 export const cases: Record<string, [ResolvedDocument, Measurement]> = {
-  fits: [doc("distributed_ai"), fits],
-  tight: [doc("distributed_ai"), tight],
-  over: [doc("distributed_ai"), over],
-  "over-no-shorter-summary": [doc("ux_architecture"), over],
+  fits: [doc("backend_platform"), fits],
+  tight: [doc("backend_platform"), tight],
+  over: [doc("backend_platform"), over],
+  "over-no-shorter-summary": [doc("data_ml"), over],
   "way-over": [doc(undefined, ["bullet \"x\" has no en text; fell back to another language"]), wayOver],
-  "skill-clipped": [doc("distributed_ai"), skillClipped],
+  "skill-clipped": [doc("backend_platform"), skillClipped],
 };

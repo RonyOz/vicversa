@@ -6,9 +6,11 @@ import {
   Application, Certification, Education, Experience, Localized,
   Profile, Project, Section, SkillsFile, Summary, type Catalog,
 } from "./schema.js";
-import { Theme } from "./theme.js";
+import { loadConfig } from "./config.js";
+import { dataRoot } from "./paths.js";
+import { loadTemplate, type LoadedTemplate } from "./templates/registry.js";
+import type { Theme } from "./theme.js";
 
-export const ROOT = resolve(import.meta.dirname, "..");
 
 export const Labels = z.object({
   present: Localized,
@@ -29,7 +31,7 @@ export function formatIssues(file: string, error: z.ZodError): string {
 }
 
 async function load<T extends z.ZodType>(relativePath: string, schema: T): Promise<z.infer<T>> {
-  const absolute = resolve(ROOT, relativePath);
+  const absolute = resolve(dataRoot(), relativePath);
 
   let raw: string;
   try {
@@ -55,6 +57,8 @@ function index<T extends { id: string }>(items: T[], label: string): Map<string,
 
 export type LoadedCatalog = Catalog & {
   labels: Labels;
+  /** The active template (vicversa.yaml) and its measurements. */
+  template: LoadedTemplate;
   theme: Theme;
   byId: {
     summaries: Map<string, Summary>;
@@ -71,7 +75,7 @@ export type LoadedCatalog = Catalog & {
 };
 
 export async function loadCatalog(): Promise<LoadedCatalog> {
-  const [profile, summaries, sections, experiences, projects, certifications, education, skillsFile, labels, theme] =
+  const [profile, summaries, sections, experiences, projects, certifications, education, skillsFile, labels, template] =
     await Promise.all([
       load("catalog/profile.yaml", Profile),
       load("catalog/summaries.yaml", z.array(Summary)),
@@ -82,7 +86,7 @@ export async function loadCatalog(): Promise<LoadedCatalog> {
       load("catalog/education.yaml", z.array(Education)),
       load("catalog/skills.yaml", SkillsFile),
       load("catalog/labels.yaml", Labels),
-      load("theme.yaml", Theme),
+      loadConfig(dataRoot()).then((config) => loadTemplate(config.template)),
     ]);
 
   const bullets: LoadedCatalog["byId"]["bullets"] = new Map();
@@ -103,7 +107,8 @@ export async function loadCatalog(): Promise<LoadedCatalog> {
     skills: skillsFile.skills,
     skillGroups: skillsFile.groups,
     labels,
-    theme,
+    template,
+    theme: template.theme,
     byId: {
       summaries: index(summaries, "summary"),
       sections: index(sections, "section"),
@@ -120,6 +125,7 @@ export async function loadCatalog(): Promise<LoadedCatalog> {
 
 export async function loadApplication(name: string): Promise<Application> {
   const file = name.endsWith(".yaml") ? name : `${name}.yaml`;
-  const relativePath = file.includes("/") ? file : `applications/${file}`;
+  // A bare name lives in <data>/applications/; a path (CLI only) is taken from the working directory.
+  const relativePath = file.includes("/") ? resolve(process.cwd(), file) : `applications/${file}`;
   return load(relativePath, Application);
 }

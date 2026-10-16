@@ -1,0 +1,52 @@
+# Skill groups are the default rows; applications pick rows and items.
+groups:
+  - id: languages
+    label:
+      es: Lenguajes
+      en: Languages
+  - id: backend
+    label:
+      es: Backend
+      en: Backend
+  - id: frontend
+    label:
+      es: Frontend
+      en: Frontend
+  - id: cloud
+    label:
+      es: Nube y DevOps
+      en: Cloud & DevOps
+  - id: data
+    label:
+      es: Datos
+      en: Data
+  - id: soft
+    label:
+      es: Habilidades
+      en: Soft skills
+
+skills:
+  - { id: java, name: Java, tags: [language] }
+  - { id: typescript, name: TypeScript, tags: [language] }
+  - { id: python, name: Python, tags: [language] }
+  - { id: rust, name: Rust, tags: [language] }
+  - { id: sql, name: SQL, tags: [language, data] }
+  - { id: spring, name: Spring Boot, tags: [backend] }
+  - { id: node, name: Node.js, tags: [backend] }
+  - { id: fastapi, name: FastAPI, tags: [backend] }
+  - { id: graphql, name: GraphQL, tags: [backend] }
+  - { id: react, name: React, tags: [frontend] }
+  - { id: nextjs, name: Next.js, tags: [frontend] }
+  - { id: playwright, name: Playwright, tags: [testing] }
+  - { id: aws, name: AWS, detail: "ECS, RDS, S3", tags: [cloud] }
+  - { id: terraform, name: Terraform, tags: [cloud] }
+  - { id: docker, name: Docker, tags: [cloud] }
+  - { id: kubernetes, name: Kubernetes, tags: [cloud] }
+  - { id: gha, name: GitHub Actions, tags: [cloud] }
+  - { id: postgres, name: PostgreSQL, tags: [data] }
+  - { id: pgvector, name: pgvector, tags: [data, ai] }
+  - { id: pandas, name: pandas, tags: [data] }
+  - { id: scrum, name: Scrum, tags: [process] }
+  - { id: communication, name: Communication, tags: [soft] }
+  - { id: mentoring, name: Mentoring, tags: [soft] }
+  - { id: elixir, name: Elixir, tags: [language] }

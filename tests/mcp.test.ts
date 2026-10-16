@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { copyFileSync, rmSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { after, before, test } from "node:test";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "../src/mcp-server.js";
+import { applicationsDir } from "../src/paths.js";
 
-const APPS = resolve(import.meta.dirname, "../applications");
+const APPS = applicationsDir();
 const client = new Client({ name: "test", version: "0.0.0" });
 
 before(async () => {
@@ -47,7 +48,7 @@ test("get_status returns the funnel as data and the CLI report as text", async (
 
 test("list_applications narrows by query", async () => {
   const result = await client.callTool({ name: "list_applications", arguments: { query: "initech" } });
-  assert.equal(data(result).applications.length, 5);
+  assert.equal(data(result).applications.length, 2);
 });
 
 test("get_catalog collapses to one language", async () => {
@@ -76,18 +77,18 @@ test("validate measures in Chromium and returns the assessment", async () => {
 
 test("track records an event on a scratch copy", async () => {
   const scratch = join(APPS, "zz-mcp-test.yaml");
-  copyFileSync(join(APPS, "2026-10-bluth-junior-python-developer.yaml"), scratch);
+  copyFileSync(join(APPS, "2026-10-contoso-backend-engineer.yaml"), scratch);
   try {
     const result = await client.callTool({
       name: "track",
-      arguments: { name: "zz-mcp-test", stage: "rejected", date: "2026-10-10", note: "correo" },
+      arguments: { name: "zz-mcp-test", stage: "rejected", date: "2026-10-14", note: "correo" },
     });
     assert.notEqual(result.isError, true, text(result));
     assert.equal(data(result).events.length, 2);
     assert.equal(data(result).summary.state, "closed");
     const again = await client.callTool({ name: "track", arguments: { name: "zz-mcp-test", stage: "interview" } });
     assert.equal(again.isError, true);
-    assert.match(text(again), /already closed: rejected on 2026-10-10/);
+    assert.match(text(again), /already closed: rejected on 2026-10-14/);
     const undo = await client.callTool({ name: "undo_last_event", arguments: { name: "zz-mcp-test" } });
     assert.notEqual(undo.isError, true, text(undo));
     assert.equal(data(undo).removed.stage, "rejected");

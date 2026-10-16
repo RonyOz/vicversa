@@ -3,7 +3,10 @@
     "vicversa": {
       "type": "stdio",
       "command": "node_modules/.bin/tsx",
-      "args": ["src/mcp.ts"]
+      "args": [
+        "--env-file-if-exists=.env",
+        "src/mcp.ts"
+      ]
     }
   }
 }

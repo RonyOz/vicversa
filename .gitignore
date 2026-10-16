@@ -3,4 +3,5 @@ out/
 *.log
 .DS_Store
 .agents/
-.opencode/
+.opencode/.vicversa-cache/
+.env

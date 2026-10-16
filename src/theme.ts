@@ -6,7 +6,8 @@ export const Theme = z.object({
   page: z.object({ width: z.number(), height: z.number(), margin: Margin }),
   color: z.object({ text: z.string(), muted: z.string(), rule: z.string(), link: z.string() }),
   type: z.object({
-    family: z.object({ sans: z.string(), mono: z.string() }),
+    /** `body` is the main family (serif or sans); `fallback` only matters if embedding ever fails. */
+    family: z.object({ body: z.string(), mono: z.string(), fallback: z.enum(["serif", "sans-serif"]).default("sans-serif") }),
     weight: z.object({
       regular: z.number(), medium: z.number(), semibold: z.number(), bold: z.number(),
     }),
@@ -68,7 +69,7 @@ export function themeToCssVars(theme: Theme): string {
     "color-rule": theme.color.rule,
     "color-link": theme.color.link,
 
-    "font-sans": `"${theme.type.family.sans}", sans-serif`,
+    "font-body": `"${theme.type.family.body}", ${theme.type.family.fallback}`,
     "font-mono": `"${theme.type.family.mono}", monospace`,
 
     "weight-regular": String(theme.type.weight.regular),

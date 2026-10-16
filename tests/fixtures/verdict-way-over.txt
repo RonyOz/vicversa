@@ -12,9 +12,9 @@ false
   No single cut is enough — you need at least two.
 
   Options, cheapest first:
-      bullet routewise.arch                     13.5pt  1 line
-      bullet andina_monitor.students         27.0pt  2 lines
-      bullet northwind.ddd                   40.5pt  3 lines
-      item   routewise                          90.5pt  whole entry, projects
-      item   northwind                      162.0pt  whole entry, experience
+      bullet ledger.sync                    13.5pt  1 line
+      bullet andina_ta.students             27.0pt  2 lines
+      bullet northwind.payments             40.5pt  3 lines
+      item   ledger                         90.5pt  whole entry, projects
+      item   northwind                     162.0pt  whole entry, experience
   ! bullet "x" has no en text; fell back to another language

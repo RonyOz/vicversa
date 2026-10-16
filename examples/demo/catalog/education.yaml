@@ -1,0 +1,17 @@
+- id: andina
+  org:
+    es: Universidad Andina
+    en: Andina University
+  program:
+    es: Ingeniería de Software
+    en: Software Engineering
+  start: "2021-01"
+  end: null
+  graduation: "2026-12"
+  semester: 10
+  gpa:
+    es: "4.4"
+    en: "3.6/4.0"
+  honors:
+    - es: Beca de excelencia académica
+      en: Academic excellence scholarship

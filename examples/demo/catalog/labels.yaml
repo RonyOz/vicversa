@@ -1,0 +1,16 @@
+# Fixed phrases the template needs that are nobody's CV content.
+present:
+  es: Actualidad
+  en: Present
+graduation:
+  es: Graduación
+  en: Graduation
+semester:
+  es: Semestre
+  en: Semester
+gpa:
+  es: Promedio
+  en: GPA
+obtained:
+  es: Obtenida en
+  en: Obtained

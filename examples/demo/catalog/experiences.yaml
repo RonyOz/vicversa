@@ -1,0 +1,88 @@
+# Jobs, newest first. Each bullet has an id so applications can pick it.
+- id: northwind
+  org: Northwind Labs
+  role:
+    es: Desarrollador Backend
+    en: Backend Developer
+  start: "2025-01"
+  end: null
+  bullets:
+    - id: northwind.payments
+      tags: [backend, java]
+      text:
+        es: >-
+          Rediseñé el servicio de pagos en Java (Spring Boot) separando la
+          conciliación en eventos, lo que bajó los reprocesos manuales en un 40 %.
+        en: >-
+          Redesigned the payments service in Java (Spring Boot), splitting
+          reconciliation into events and cutting manual reprocessing by 40%.
+    - id: northwind.observability
+      tags: [platform, observability]
+      text:
+        es: >-
+          Introduje trazas y métricas con OpenTelemetry y Grafana; el tiempo
+          medio para diagnosticar incidentes pasó de horas a minutos.
+        en: >-
+          Introduced OpenTelemetry traces and Grafana dashboards; mean time to
+          diagnose incidents went from hours to minutes.
+    - id: northwind.iac
+      tags: [cloud, devops]
+      text:
+        es: >-
+          Migré tres servicios a AWS con Terraform y pipelines de GitHub Actions
+          con despliegues azul-verde.
+        en: >-
+          Moved three services to AWS with Terraform and GitHub Actions
+          pipelines using blue-green deploys.
+    - id: northwind.mentoring
+      tags: [teamwork]
+      text:
+        es: Acompañé a dos practicantes con revisiones de código semanales y pair programming.
+        en: Mentored two interns through weekly code reviews and pair programming.
+
+- id: fabrikam
+  org: Fabrikam Health
+  role:
+    es: Practicante de Ingeniería de Software
+    en: Software Engineering Intern
+  start: "2024-06"
+  end: "2024-12"
+  bullets:
+    - id: fabrikam.portal
+      tags: [frontend, react]
+      text:
+        es: >-
+          Construí el portal de citas en React y TypeScript con pruebas de
+          extremo a extremo en Playwright.
+        en: >-
+          Built the appointments portal in React and TypeScript with end-to-end
+          tests in Playwright.
+    - id: fabrikam.api
+      tags: [backend, node]
+      text:
+        es: Diseñé la API de agendamiento en Node.js con validación por esquema y documentación OpenAPI.
+        en: Designed the scheduling API in Node.js with schema validation and OpenAPI docs.
+    - id: fabrikam.a11y
+      tags: [frontend, accessibility]
+      text:
+        es: Llevé el portal a cumplimiento WCAG 2.1 AA con auditorías automáticas en CI.
+        en: Brought the portal to WCAG 2.1 AA compliance with automated audits in CI.
+
+- id: andina_ta
+  org: Universidad Andina
+  role:
+    es: Monitor de Estructuras de Datos
+    en: Data Structures Teaching Assistant
+  start: "2023-08"
+  end: "2024-05"
+  bullets:
+    - id: andina_ta.students
+      tags: [teaching, communication]
+      text:
+        es: Acompañé a más de 60 estudiantes por semestre con talleres y retroalimentación de código.
+        en: Supported 60+ students per semester through workshops and code feedback.
+    - id: andina_ta.autograder
+      tags: [python, automation]
+      text:
+        es: Escribí un calificador automático en Python que redujo a la mitad el tiempo de corrección.
+        en: Wrote a Python autograder that halved grading time.

@@ -1,0 +1,48 @@
+# harvard — measurements in points (72pt = 1in). US Letter, 0.6in margins.
+page:
+  width: 612
+  height: 792
+  margin: { top: 40, right: 44, bottom: 40, left: 44 }
+
+color:
+  text: "#000000"
+  muted: "#333333"
+  rule: "#000000"
+  link: "#000000"
+
+type:
+  family:
+    body: "Tinos"
+    mono: "Tinos"
+    fallback: serif
+  weight: { regular: 400, medium: 400, semibold: 700, bold: 700 }
+  size:
+    name: 17
+    contact: 9.5
+    summary: 10
+    section: 11.5
+    body: 10
+    itemTitle: 10
+    skillLabel: 10
+    skillValue: 10
+    honor: 9.5
+  lineHeight: { body: 1.22, heading: 1.15 }
+
+space:
+  section: 9
+  afterHeaderRule: 4
+  headerToRule: 1.5
+  item: 5
+  afterItemTitle: 1.5
+  skillRow: 1
+  bodyInset: 0
+  sectionTitleIndent: 0
+  afterName: 2
+  contactToRule: 0
+  afterHeaderBlock: 6
+
+rule: { header: 0.75, section: 0.75 }
+honor: { separator: " · " }
+bullet: { indent: 14, markerInset: 0, markerSize: 0, markerTop: 0 }
+skills: { labelWidth: 0, labelSuffix: ":", separator: ", ", detailSeparator: " " }
+text: { align: left, hyphens: false }

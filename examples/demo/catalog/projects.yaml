@@ -1,0 +1,61 @@
+# Personal and academic projects. `label` is the lead-in, usually a repo path.
+- id: ledger
+  label: github.com/alex-rivera-example/ledger
+  href: https://github.com/alex-rivera-example/ledger
+  name:
+    es: Finanzas personales offline-first
+    en: Offline-first personal finance app
+  tech: [react, typescript, sqlite]
+  bullets:
+    - id: ledger.sync
+      tags: [fullstack, offline]
+      text:
+        es: Sincronización sin conflictos entre dispositivos con CRDTs y una base SQLite local.
+        en: Conflict-free sync across devices using CRDTs over a local SQLite store.
+    - id: ledger.tests
+      tags: [testing]
+      text:
+        es: Más de 150 pruebas automatizadas y despliegue continuo en cada fusión.
+        en: 150+ automated tests and continuous deployment on every merge.
+
+- id: routewise
+  label: github.com/alex-rivera-example/routewise
+  href: https://github.com/alex-rivera-example/routewise
+  name:
+    es: Optimizador de rutas de reparto
+    en: Delivery route optimizer
+  tech: [python, ortools, fastapi]
+  bullets:
+    - id: routewise.solver
+      tags: [python, algorithms]
+      text:
+        es: Modelé el ruteo con OR-Tools y una API en FastAPI que planea 200 paradas en segundos.
+        en: Modeled routing with OR-Tools behind a FastAPI service that plans 200 stops in seconds.
+
+- id: docsearch
+  label: github.com/alex-rivera-example/docsearch
+  href: https://github.com/alex-rivera-example/docsearch
+  name:
+    es: Búsqueda semántica de documentación
+    en: Semantic documentation search
+  tech: [python, llm, postgres]
+  bullets:
+    - id: docsearch.rag
+      tags: [ai, rag]
+      text:
+        es: Recuperación aumentada con pgvector y evaluación de respuestas con un conjunto de preguntas de referencia.
+        en: Retrieval-augmented answers on pgvector, evaluated against a reference question set.
+
+- id: kanban_cli
+  label: github.com/alex-rivera-example/kanban-cli
+  href: https://github.com/alex-rivera-example/kanban-cli
+  name:
+    es: Tablero kanban para la terminal
+    en: Kanban board for the terminal
+  tech: [rust]
+  bullets:
+    - id: kanban_cli.tui
+      tags: [rust, tooling]
+      text:
+        es: Interfaz de terminal en Rust con atajos de teclado y almacenamiento en archivos de texto.
+        en: Rust terminal UI with keyboard shortcuts and plain-text storage.

@@ -1,0 +1,25 @@
+# Credentials, rendered newest first.
+- id: aws_ccp
+  name:
+    es: AWS Certified Cloud Practitioner
+    en: AWS Certified Cloud Practitioner
+  issuer:
+    es: Amazon Web Services
+    en: Amazon Web Services
+  date: "2025-03"
+  bullets:
+    - id: aws_ccp.scope
+      tags: [cloud]
+      text:
+        es: Fundamentos de servicios, seguridad y costos en AWS.
+        en: Fundamentals of AWS services, security and pricing.
+
+- id: psm1
+  name:
+    es: Professional Scrum Master I
+    en: Professional Scrum Master I
+  issuer:
+    es: Scrum.org
+    en: Scrum.org
+  date: "2024-11"
+  bullets: []

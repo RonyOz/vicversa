@@ -1,5 +1,117 @@
 [
   {
+    "family": "Arimo",
+    "weight": "400",
+    "style": "italic",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/arimo/v36/P5sdzZCDf9_T_10c3i9MeUcyat4iJY-ERCrNfQYYaA.woff2",
+    "file": "Arimo-400-italic-latin-ext.woff2"
+  },
+  {
+    "family": "Arimo",
+    "weight": "400",
+    "style": "italic",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/arimo/v36/P5sdzZCDf9_T_10c3i9MeUcyat4iJY-ERCrDfQY.woff2",
+    "file": "Arimo-400-italic-latin.woff2"
+  },
+  {
+    "family": "Arimo",
+    "weight": "400",
+    "style": "normal",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/arimo/v36/P5sMzZCDf9_T_10XxCF8jA.woff2",
+    "file": "Arimo-400-normal-latin-ext.woff2"
+  },
+  {
+    "family": "Arimo",
+    "weight": "400",
+    "style": "normal",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/arimo/v36/P5sMzZCDf9_T_10ZxCE.woff2",
+    "file": "Arimo-400-normal-latin.woff2"
+  },
+  {
+    "family": "Arimo",
+    "weight": "500",
+    "style": "normal",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/arimo/v36/P5sMzZCDf9_T_10XxCF8jA.woff2",
+    "file": "Arimo-500-normal-latin-ext.woff2"
+  },
+  {
+    "family": "Arimo",
+    "weight": "500",
+    "style": "normal",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/arimo/v36/P5sMzZCDf9_T_10ZxCE.woff2",
+    "file": "Arimo-500-normal-latin.woff2"
+  },
+  {
+    "family": "Arimo",
+    "weight": "600",
+    "style": "normal",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/arimo/v36/P5sMzZCDf9_T_10XxCF8jA.woff2",
+    "file": "Arimo-600-normal-latin-ext.woff2"
+  },
+  {
+    "family": "Arimo",
+    "weight": "600",
+    "style": "normal",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/arimo/v36/P5sMzZCDf9_T_10ZxCE.woff2",
+    "file": "Arimo-600-normal-latin.woff2"
+  },
+  {
+    "family": "Arimo",
+    "weight": "700",
+    "style": "normal",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/arimo/v36/P5sMzZCDf9_T_10XxCF8jA.woff2",
+    "file": "Arimo-700-normal-latin-ext.woff2"
+  },
+  {
+    "family": "Arimo",
+    "weight": "700",
+    "style": "normal",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/arimo/v36/P5sMzZCDf9_T_10ZxCE.woff2",
+    "file": "Arimo-700-normal-latin.woff2"
+  },
+  {
+    "family": "Instrument Serif",
+    "weight": "400",
+    "style": "italic",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/instrumentserif/v5/jizHRFtNs2ka5fXjeivQ4LroWlx-6zAjgn7MsNo.woff2",
+    "file": "InstrumentSerif-400-italic-latin-ext.woff2"
+  },
+  {
+    "family": "Instrument Serif",
+    "weight": "400",
+    "style": "italic",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/instrumentserif/v5/jizHRFtNs2ka5fXjeivQ4LroWlx-6zAjjH7M.woff2",
+    "file": "InstrumentSerif-400-italic-latin.woff2"
+  },
+  {
+    "family": "Instrument Serif",
+    "weight": "400",
+    "style": "normal",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/instrumentserif/v5/jizBRFtNs2ka5fXjeivQ4LroWlx-6zsTjmbI.woff2",
+    "file": "InstrumentSerif-400-normal-latin-ext.woff2"
+  },
+  {
+    "family": "Instrument Serif",
+    "weight": "400",
+    "style": "normal",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/instrumentserif/v5/jizBRFtNs2ka5fXjeivQ4LroWlx-6zUTjg.woff2",
+    "file": "InstrumentSerif-400-normal-latin.woff2"
+  },
+  {
     "family": "JetBrains Mono",
     "weight": "400",
     "style": "normal",
@@ -110,5 +222,53 @@
     "subset": "latin",
     "url": "https://fonts.gstatic.com/s/montserrat/v31/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2",
     "file": "Montserrat-700-normal-latin.woff2"
+  },
+  {
+    "family": "Tinos",
+    "weight": "400",
+    "style": "italic",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/tinos/v26/buE2poGnedXvwjX-TmhJ9RI-.woff2",
+    "file": "Tinos-400-italic-latin-ext.woff2"
+  },
+  {
+    "family": "Tinos",
+    "weight": "400",
+    "style": "italic",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/tinos/v26/buE2poGnedXvwjX-TmZJ9Q.woff2",
+    "file": "Tinos-400-italic-latin.woff2"
+  },
+  {
+    "family": "Tinos",
+    "weight": "400",
+    "style": "normal",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/tinos/v26/buE4poGnedXvwjX1fmRR8Q.woff2",
+    "file": "Tinos-400-normal-latin-ext.woff2"
+  },
+  {
+    "family": "Tinos",
+    "weight": "400",
+    "style": "normal",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/tinos/v26/buE4poGnedXvwjX7fmQ.woff2",
+    "file": "Tinos-400-normal-latin.woff2"
+  },
+  {
+    "family": "Tinos",
+    "weight": "700",
+    "style": "normal",
+    "subset": "latin-ext",
+    "url": "https://fonts.gstatic.com/s/tinos/v26/buE1poGnedXvwj1AW3Fg0C8H-Q.woff2",
+    "file": "Tinos-700-normal-latin-ext.woff2"
+  },
+  {
+    "family": "Tinos",
+    "weight": "700",
+    "style": "normal",
+    "subset": "latin",
+    "url": "https://fonts.gstatic.com/s/tinos/v26/buE1poGnedXvwj1AW3Fu0C8.woff2",
+    "file": "Tinos-700-normal-latin.woff2"
   }
 ]

@@ -1,24 +1,25 @@
 import assert from "node:assert/strict";
 import { copyFileSync, existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { test } from "node:test";
 import {
   findApplication, getApplication, getCatalog, getStatus, listApplications,
   renderApplication, trackEvent, validateApplications,
 } from "../src/ops.js";
+import { applicationsDir } from "../src/paths.js";
 
-const APPS = resolve(import.meta.dirname, "../applications");
+const APPS = applicationsDir();
 const today = "2026-10-14";
 
 test("findApplication suggests close names", async () => {
   assert.equal(await findApplication("baseline-es.yaml"), "baseline-es");
-  await assert.rejects(findApplication("initech"), /Did you mean: .*initech-sre-intern/);
+  await assert.rejects(findApplication("initech"), /Did you mean: .*initech-qa-automation/);
 });
 
 test("listApplications filters by company or role and marks templates", async () => {
-  const initech = await listApplications({ query: "initech", today });
-  assert.equal(initech.length, 5);
+  const initech = await listApplications({ query: "INITECH", today });
+  assert.equal(initech.length, 2);
   assert.ok(initech.every((a) => a.company === "Initech" && a.tracked));
   const all = await listApplications({ today });
   const template = all.find((a) => a.name === "baseline-es")!;
@@ -27,11 +28,11 @@ test("listApplications filters by company or role and marks templates", async ()
 });
 
 test("getApplication returns parsed data, timeline and path", async () => {
-  const app = await getApplication("2026-10-globex-desarrollador-sistemas-cuentas", { today });
+  const app = await getApplication("2026-10-globex-desarrollador-fullstack", { today });
   assert.equal(app.application.metadata.company, "Globex");
   assert.deepEqual(app.timeline, [{ date: "2026-10-01", stage: "applied" }]);
   assert.equal(app.summary?.daysSince, 13);
-  assert.ok(app.path.endsWith("applications/2026-10-globex-desarrollador-sistemas-cuentas.yaml"));
+  assert.ok(app.path.endsWith("applications/2026-10-globex-desarrollador-fullstack.yaml"));
 });
 
 test("getCatalog returns only the parts asked for, collapsed to one language", async () => {
@@ -76,7 +77,7 @@ test("renderApplication writes the PDF where asked", async () => {
 
 test("trackEvent records into the file and returns the new state", async () => {
   const scratch = join(APPS, "zz-ops-test.yaml");
-  copyFileSync(join(APPS, "2026-10-bluth-junior-python-developer.yaml"), scratch);
+  copyFileSync(join(APPS, "2026-10-contoso-backend-engineer.yaml"), scratch);
   try {
     const result = await trackEvent("zz-ops-test", { stage: "interview", note: "RH" }, today);
     assert.deepEqual(result.event, { date: today, stage: "interview", note: "RH" });
@@ -90,11 +91,11 @@ test("trackEvent records into the file and returns the new state", async () => {
 
 test("parallel trackEvent calls on one file keep every event", async () => {
   const scratch = join(APPS, "zz-ops-race.yaml");
-  copyFileSync(join(APPS, "2026-10-bluth-junior-python-developer.yaml"), scratch);
+  copyFileSync(join(APPS, "2026-10-contoso-backend-engineer.yaml"), scratch);
   try {
     await Promise.all([
-      trackEvent("zz-ops-race", { stage: "assessment", date: "2026-10-12" }, today),
-      trackEvent("zz-ops-race", { stage: "interview", date: "2026-10-13" }, today),
+      trackEvent("zz-ops-race", { stage: "assessment", date: "2026-10-13" }, today),
+      trackEvent("zz-ops-race", { stage: "interview", date: "2026-10-14" }, today),
     ]);
     const { timeline } = await getApplication("zz-ops-race", { today });
     assert.deepEqual(timeline?.map((e) => e.stage), ["applied", "assessment", "interview"]);
@@ -106,9 +107,9 @@ test("parallel trackEvent calls on one file keep every event", async () => {
 test("undoLastEvent reopens a closed application", async () => {
   const { undoLastEvent } = await import("../src/ops.js");
   const scratch = join(APPS, "zz-ops-undo.yaml");
-  copyFileSync(join(APPS, "2026-10-bluth-junior-python-developer.yaml"), scratch);
+  copyFileSync(join(APPS, "2026-10-contoso-backend-engineer.yaml"), scratch);
   try {
-    await trackEvent("zz-ops-undo", { stage: "rejected", date: "2026-10-10" }, today);
+    await trackEvent("zz-ops-undo", { stage: "rejected", date: "2026-10-14" }, today);
     const result = await undoLastEvent("zz-ops-undo", today);
     assert.equal(result.removed.stage, "rejected");
     assert.equal(result.summary?.state, "active");

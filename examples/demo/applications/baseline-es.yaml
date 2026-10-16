@@ -1,0 +1,34 @@
+# Template: a starting selection, never sent (no date, no tracking).
+metadata:
+  language: es
+
+content:
+  summary: backend_platform
+  contact: [email, phone, github, linkedin]
+  sections: [skills, experience, projects, education, certifications]
+
+  skills:
+    - group: languages
+      items: [java, typescript, python, sql]
+    - group: backend
+      items: [spring, node, fastapi]
+    - group: cloud
+      items: [aws, terraform, docker, gha]
+
+  experience:
+    - northwind.payments
+    - northwind.observability
+    - northwind.iac
+    - fabrikam.api
+    - andina_ta.students
+
+  projects:
+    - routewise.solver
+    - ledger.tests
+
+  education:
+    - andina
+
+  certifications:
+    - aws_ccp.scope
+    - psm1

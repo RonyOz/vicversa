@@ -1,6 +1,7 @@
 import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
 import { basename, resolve } from "node:path";
-import { loadApplication, loadCatalog, ROOT } from "./catalog.js";
+import { loadApplication, loadCatalog } from "./catalog.js";
+import { applicationsDir, catalogDir, dataRoot, outDir } from "./paths.js";
 import { buildHtml } from "./html.js";
 import { pick } from "./i18n.js";
 import { renderPdf, withSharedBrowser } from "./render.js";
@@ -22,8 +23,6 @@ import { assess, verdict, type Assessment } from "./validate.js";
 
 export const DEFAULT_STALE_DAYS = 21;
 export const DEFAULT_WEEKS = 8;
-export const OUT_DIR = resolve(ROOT, "out");
-const APPLICATIONS_DIR = resolve(ROOT, "applications");
 
 /** Runs the functions passed to it one at a time, in call order. */
 function serialQueue() {
@@ -45,7 +44,7 @@ const exclusive = serialQueue();
 const exclusiveWrite = serialQueue();
 
 export async function applicationNames(): Promise<string[]> {
-  const files = await readdir(APPLICATIONS_DIR);
+  const files = await readdir(applicationsDir());
   return files.filter((f) => f.endsWith(".yaml")).map((f) => basename(f, ".yaml")).sort();
 }
 
@@ -61,7 +60,7 @@ export async function findApplication(input: string): Promise<string> {
 }
 
 export function applicationPath(name: string): string {
-  return resolve(APPLICATIONS_DIR, `${name}.yaml`);
+  return resolve(applicationsDir(), `${name}.yaml`);
 }
 
 /** A name from applications/, or (CLI only) a path to a YAML file elsewhere. */
@@ -239,7 +238,7 @@ export async function validateApplications(names?: readonly string[]): Promise<V
         try {
           const { name, app } = await openApplication(input);
           const doc = resolveDocument(app, catalog);
-          const html = await buildHtml(doc, catalog.theme);
+          const html = await buildHtml(doc, catalog.template);
           const { measurement } = await render(html, catalog.theme);
           const assessment = assess(doc, measurement, catalog.theme);
           const { report } = verdict(name, doc, measurement, catalog.theme);
@@ -271,12 +270,12 @@ export async function renderApplication(
   const { name, app } = await openApplication(input);
   const catalog = await loadCatalog();
   const doc = resolveDocument(app, catalog);
-  const html = await buildHtml(doc, catalog.theme);
+  const html = await buildHtml(doc, catalog.template);
 
-  await mkdir(OUT_DIR, { recursive: true });
+  await mkdir(outDir(), { recursive: true });
   let htmlPath: string | undefined;
   if (options.html) {
-    htmlPath = resolve(OUT_DIR, `${name}.html`);
+    htmlPath = resolve(outDir(), `${name}.html`);
     await writeFile(htmlPath, html);
   }
 
@@ -287,7 +286,7 @@ export async function renderApplication(
   if (htmlPath) outcome.htmlPath = htmlPath;
   if (!assessment.ok && !options.force) return outcome;
 
-  const pdfPath = options.out ? resolve(process.cwd(), options.out) : resolve(OUT_DIR, `${name}.pdf`);
+  const pdfPath = options.out ? resolve(process.cwd(), options.out) : resolve(outDir(), `${name}.pdf`);
   await writeFile(pdfPath, pdf);
   return { ...outcome, written: true, pdfPath };
 }
@@ -328,7 +327,7 @@ export async function undoLastEvent(
 export async function getCvHtml(input: string): Promise<{ name: string; html: string }> {
   const { name, app } = await openApplication(input);
   const catalog = await loadCatalog();
-  return { name, html: await buildHtml(resolveDocument(app, catalog), catalog.theme) };
+  return { name, html: await buildHtml(resolveDocument(app, catalog), catalog.template) };
 }
 
 export interface CvListing {
@@ -419,12 +418,15 @@ export interface FitEntry {
 
 /** Fingerprint of everything that changes a layout: any edit invalidates the fit cache. */
 async function layoutFingerprint(): Promise<string> {
-  const files: string[] = [resolve(ROOT, "theme.yaml")];
-  for (const dir of ["catalog", "applications"]) {
-    const names = await readdir(resolve(ROOT, dir));
-    files.push(...names.filter((n) => n.endsWith(".yaml")).map((n) => resolve(ROOT, dir, n)));
+  const { template } = await loadCatalog();
+  const files: string[] = [resolve(dataRoot(), "vicversa.yaml")];
+  for (const dir of [catalogDir(), applicationsDir(), template.dir]) {
+    const names = await readdir(dir, { recursive: true });
+    files.push(...names.map((n) => resolve(dir, n)));
   }
-  const stamps = await Promise.all(files.map(async (file) => `${file}:${(await stat(file)).mtimeMs}`));
+  const stamps = await Promise.all(
+    files.map(async (file) => `${file}:${await stat(file).then((s) => (s.isFile() ? s.mtimeMs : 0), () => "none")}`),
+  );
   return stamps.sort().join("|");
 }
 

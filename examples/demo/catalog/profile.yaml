@@ -1,0 +1,22 @@
+# A fictional person. Every contact detail uses reserved example values.
+name: Alex Rivera
+
+contact:
+  - id: location
+    text:
+      es: Medellín, Colombia
+      en: Medellín, Colombia
+  - id: phone
+    text: "+1 555 0100"
+  - id: email
+    text: alex.rivera@example.com
+    href: mailto:alex.rivera@example.com
+  - id: website
+    text: alexrivera.example.com
+    href: https://alexrivera.example.com
+  - id: github
+    text: github.com/alex-rivera-example
+    href: https://github.com/alex-rivera-example
+  - id: linkedin
+    text: linkedin.com/in/alex-rivera-example
+    href: https://linkedin.com/in/alex-rivera-example

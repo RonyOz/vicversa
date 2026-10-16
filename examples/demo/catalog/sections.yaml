@@ -1,0 +1,21 @@
+# Default section headings; an application may override any of them.
+- id: skills
+  title:
+    es: HABILIDADES
+    en: SKILLS
+- id: experience
+  title:
+    es: EXPERIENCIA
+    en: EXPERIENCE
+- id: projects
+  title:
+    es: PROYECTOS
+    en: PROJECTS
+- id: education
+  title:
+    es: EDUCACIÓN
+    en: EDUCATION
+- id: certifications
+  title:
+    es: CERTIFICACIONES
+    en: CERTIFICATIONS

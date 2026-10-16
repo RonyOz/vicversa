@@ -126,7 +126,7 @@ export function createServer(): McpServer {
       description:
         "One application parsed (metadata, content selections, tracking), its effective timeline and state, " +
         "and the file path to edit it.",
-      inputSchema: { name: z.string().describe("file name without .yaml, e.g. 2026-10-globex-…") },
+      inputSchema: { name: z.string().describe("file name without .yaml, e.g. 2026-10-globex-desarrollador-fullstack") },
       outputSchema: {
         name: z.string(),
         path: z.string(),

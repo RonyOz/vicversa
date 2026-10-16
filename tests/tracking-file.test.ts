@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { test } from "node:test";
 import { parse } from "yaml";
 import type { TrackingEvent } from "../src/schema.js";
+import { applicationsDir } from "../src/paths.js";
 import { addEventToText } from "../src/tracking-file.js";
 
 const ev = (date: string, stage: TrackingEvent["stage"], note?: string): TrackingEvent =>
@@ -78,8 +79,8 @@ test("refuses flow-style tracking and multi-line entries", () => {
   assert.throws(() => addEventToText(block, ev("2026-10-05", "interview"), "2026-10-10"), /one line each/);
 });
 
-test("every real application only gains lines at the end", () => {
-  const dir = resolve(import.meta.dirname, "../applications");
+test("every demo application only gains lines at the end", () => {
+  const dir = applicationsDir();
   for (const file of readdirSync(dir).filter((f) => f.endsWith(".yaml"))) {
     const text = readFileSync(resolve(dir, file), "utf8");
     const data = parse(text);

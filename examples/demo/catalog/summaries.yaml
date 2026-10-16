@@ -1,0 +1,34 @@
+# Opening paragraphs. The summary is the cheapest lever on page height.
+- id: backend_platform
+  tags: [backend, platform]
+  text:
+    es: >-
+      Ingeniero de software enfocado en backend y plataforma. Diseño APIs y
+      servicios en Java y TypeScript, los despliego en la nube con
+      infraestructura como código y mido lo que importa antes de optimizar.
+    en: >-
+      Software engineer focused on backend and platform work. I design APIs
+      and services in Java and TypeScript, ship them to the cloud with
+      infrastructure as code, and measure what matters before optimizing.
+- id: fullstack_product
+  tags: [fullstack, product]
+  text:
+    es: >-
+      Desarrollador full-stack que disfruta convertir problemas de producto en
+      software sencillo: interfaces en React, APIs bien tipadas y pruebas
+      automatizadas que permiten cambiar rápido sin romper nada.
+    en: >-
+      Full-stack developer who enjoys turning product problems into simple
+      software: React interfaces, well-typed APIs and automated tests that make
+      it safe to change things quickly.
+- id: data_ml
+  tags: [data, ml]
+  text:
+    es: >-
+      Estudiante de último semestre interesado en datos y aprendizaje
+      automático: pipelines en Python, SQL y prototipos con modelos de lenguaje
+      evaluados con métricas, no con intuición.
+    en: >-
+      Final-year student into data and machine learning: Python pipelines,
+      SQL, and language-model prototypes evaluated with metrics rather than
+      intuition.

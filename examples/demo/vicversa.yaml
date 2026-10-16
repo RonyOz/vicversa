@@ -1,0 +1,3 @@
+# The bundled demo: a fictional profile, used by the tests and the README.
+# Point VICVERSA_HOME at your own folder to use your data instead.
+template: harvard

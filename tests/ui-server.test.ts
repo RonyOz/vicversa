@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { copyFileSync, readFileSync, rmSync } from "node:fs";
 import type { AddressInfo } from "node:net";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { after, before, test } from "node:test";
+import { applicationsDir } from "../src/paths.js";
 import { createUiServer } from "../src/ui/server.js";
 
-const APPS = resolve(import.meta.dirname, "../applications");
+const APPS = applicationsDir();
 const server = await createUiServer({ today: () => "2026-10-14", vite: false });
 let base = "";
 
@@ -20,7 +21,7 @@ const postJson = (path: string, body: unknown) =>
 
 const withScratch = async (name: string, fn: (path: string) => Promise<void>) => {
   const scratch = join(APPS, `${name}.yaml`);
-  copyFileSync(join(APPS, "2026-10-bluth-junior-python-developer.yaml"), scratch);
+  copyFileSync(join(APPS, "2026-10-contoso-backend-engineer.yaml"), scratch);
   try {
     await fn(scratch);
   } finally {
@@ -34,7 +35,7 @@ test("GET /api/dashboard returns rows with send date, language and posting url",
   const data = await response.json();
   assert.equal(data.today, "2026-10-14");
   assert.equal(data.funnel.total, data.rows.length);
-  const globex = data.rows.find((r: { name: string }) => r.name === "2026-10-globex-desarrollador-sistemas-cuentas");
+  const globex = data.rows.find((r: { name: string }) => r.name === "2026-10-globex-desarrollador-fullstack");
   assert.equal(globex.applied, "2026-10-01");
   assert.equal(globex.language, "es");
   assert.ok("url" in globex);
@@ -42,7 +43,7 @@ test("GET /api/dashboard returns rows with send date, language and posting url",
 });
 
 test("GET /api/applications/:name returns metadata notes and timeline", async () => {
-  const data = await (await fetch(`${base}/api/applications/2026-10-globex-desarrollador-sistemas-cuentas`)).json();
+  const data = await (await fetch(`${base}/api/applications/2026-10-globex-desarrollador-fullstack`)).json();
   assert.equal(data.application.metadata.company, "Globex");
   assert.match(data.application.metadata.notes, /posting/);
   assert.deepEqual(data.timeline[0], { date: "2026-10-01", stage: "applied" });
@@ -70,7 +71,7 @@ test("POST /api/track records and POST /api/undo removes it", async () => {
 });
 
 test("expected failures are 400 with the actionable message", async () => {
-  const future = await postJson("/api/track", { name: "2026-10-monarch-ai-fullstack-student", stage: "interview", date: "2099-01-01" });
+  const future = await postJson("/api/track", { name: "2026-10-contoso-backend-engineer", stage: "interview", date: "2099-01-01" });
   assert.equal(future.status, 400);
   assert.match((await future.json()).error, /in the future/);
   const missing = await fetch(`${base}/api/applications/initech`);
@@ -84,32 +85,32 @@ test("unknown API routes are 404", async () => {
 
 test("GET /api/cvs lists every CV, templates included", async () => {
   const data = await (await fetch(`${base}/api/cvs`)).json();
-  assert.equal(data.cvs.length, 38);
+  assert.equal(data.cvs.length, 15);
   const template = data.cvs.find((c: { name: string }) => c.name === "baseline-es");
   assert.equal(template.tracked, false);
   assert.equal(template.applied, null);
-  const globex = data.cvs.find((c: { name: string }) => c.name === "2026-10-globex-desarrollador-sistemas-cuentas");
+  const globex = data.cvs.find((c: { name: string }) => c.name === "2026-10-globex-desarrollador-fullstack");
   assert.equal(globex.applied, "2026-10-01");
-  assert.equal(globex.summaryId, "globex_cuentas_lifecycle");
+  assert.equal(globex.summaryId, "fullstack_product");
 });
 
 test("GET /api/cvs/:name returns its pieces and tracking", async () => {
-  const data = await (await fetch(`${base}/api/cvs/2026-10-globex-desarrollador-sistemas-cuentas`)).json();
-  assert.equal(data.pieces.summary, "globex_cuentas_lifecycle");
-  assert.equal(data.pieces.items[0].id, "northwind");
+  const data = await (await fetch(`${base}/api/cvs/2026-10-globex-desarrollador-fullstack`)).json();
+  assert.equal(data.pieces.summary, "fullstack_product");
+  assert.equal(data.pieces.items[0].id, "fabrikam");
   assert.equal(data.tracking.state, "active");
 });
 
 test("GET /api/catalog returns every part with usage", async () => {
   const data = await (await fetch(`${base}/api/catalog`)).json();
   assert.ok(Array.isArray(data.catalog.experiences) && data.catalog.skills.skills.length > 0);
-  assert.ok(data.usage.pieces["summary:globex_cuentas_lifecycle"].includes("2026-10-globex-desarrollador-sistemas-cuentas"));
+  assert.ok(data.usage.pieces["summary:fullstack_product"].includes("2026-10-globex-desarrollador-fullstack"));
   assert.equal(data.apps["baseline-es"].tracked, false);
 });
 
 test("GET /api/fit measures every CV once and then serves the cache", async () => {
   const first = await (await fetch(`${base}/api/fit`)).json();
-  assert.equal(Object.keys(first.fit).length, 38);
+  assert.equal(Object.keys(first.fit).length, 15);
   assert.equal(first.fit["baseline-es"].ok, true);
   assert.equal(typeof first.fit["baseline-es"].spareLines, "number");
   const started = Date.now();

@@ -3,16 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./template": "./src/templates/kit.tsx"
+  },
   "description": "Single source of truth for CV data. Renders pixel-controlled one-page PDFs from a versioned YAML catalog.",
   "scripts": {
-    "cv": "tsx src/cli.ts",
-    "render": "tsx src/cli.ts render",
-    "validate": "tsx src/cli.ts validate",
+    "cv": "tsx --env-file-if-exists=.env src/cli.ts",
+    "render": "tsx --env-file-if-exists=.env src/cli.ts render",
+    "validate": "tsx --env-file-if-exists=.env src/cli.ts validate",
     "fonts": "tsx scripts/fetch-fonts.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test --test-concurrency=1 tests/*.test.ts",
-    "mcp": "tsx src/mcp.ts",
-    "ui": "tsx src/ui/main.ts"
+    "test": "VICVERSA_HOME=examples/demo tsx --test --test-concurrency=1 tests/*.test.ts",
+    "mcp": "tsx --env-file-if-exists=.env src/mcp.ts",
+    "ui": "tsx --env-file-if-exists=.env src/ui/main.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",

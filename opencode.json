@@ -3,7 +3,11 @@
   "mcp": {
     "vicversa": {
       "type": "local",
-      "command": ["node_modules/.bin/tsx", "src/mcp.ts"],
+      "command": [
+        "node_modules/.bin/tsx",
+        "--env-file-if-exists=.env",
+        "src/mcp.ts"
+      ],
       "enabled": true
     }
   }

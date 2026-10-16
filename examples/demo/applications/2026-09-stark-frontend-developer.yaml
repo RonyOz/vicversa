@@ -1,0 +1,42 @@
+# Fictional application to Stark Industries (Frontend Developer).
+metadata:
+  company: Stark Industries
+  role: "Frontend Developer"
+  url: https://jobs.example.com/2026-09-stark-frontend-developer
+  language: en
+
+content:
+  summary: fullstack_product
+  contact: [email, phone, github, linkedin]
+  sections: [skills, experience, projects, education, certifications]
+
+  skills:
+    - group: languages
+      items: [typescript, java, sql]
+    - group: frontend
+      items: [react, nextjs, playwright]
+    - group: backend
+      items: [node, graphql]
+
+  experience:
+    - fabrikam.portal
+    - fabrikam.api
+    - fabrikam.a11y
+    - northwind.payments
+    - northwind.mentoring
+
+  projects:
+    - ledger.sync
+    - ledger.tests
+    - docsearch.rag
+
+  education:
+    - andina
+
+  certifications:
+    - aws_ccp.scope
+    - psm1
+
+tracking:
+  - { date: "2026-09-10", stage: applied }
+  - { date: "2026-09-20", stage: rejected, note: "Correo" }

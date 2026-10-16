@@ -7,7 +7,7 @@
  *
  * Run: pnpm fonts
  */
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, stat, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const FONT_DIR = resolve(import.meta.dirname, "../assets/fonts");
@@ -23,6 +23,11 @@ const CSS_URL =
   "https://fonts.googleapis.com/css2" +
   "?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;1,400" +
   "&family=JetBrains+Mono:wght@400;700" +
+  // Bundled CV templates: Tinos (Times metrics) for harvard, Arimo (Arial metrics) for classic-ats.
+  "&family=Tinos:ital,wght@0,400;0,700;1,400" +
+  "&family=Arimo:ital,wght@0,400;0,500;0,600;0,700;1,400" +
+  // Panel brand: editorial serif for document titles.
+  "&family=Instrument+Serif:ital@0;1" +
   "&display=block";
 
 type FontFace = {
@@ -78,13 +83,19 @@ async function main() {
     const slug = face.family.replace(/\s+/g, "");
     const file = `${slug}-${face.weight}-${face.style}-${face.subset}.woff2`;
 
+    const path = resolve(FONT_DIR, file);
+    manifest.push({ ...face, file });
+
+    // Never re-download a file we already have: a new upstream build of the same
+    // font can shift metrics, and with them every line break of existing CVs.
+    if (await stat(path).then(() => true, () => false)) {
+      console.log(`  ${file.padEnd(46)} kept`);
+      continue;
+    }
     const res = await fetch(face.url, { headers: { "User-Agent": UA } });
     if (!res.ok) throw new Error(`${file}: ${res.status} ${res.statusText}`);
     const bytes = Buffer.from(await res.arrayBuffer());
-
-    await writeFile(resolve(FONT_DIR, file), bytes);
-    manifest.push({ ...face, file });
-
+    await writeFile(path, bytes);
     console.log(`  ${file.padEnd(46)} ${(bytes.length / 1024).toFixed(1)} KB`);
   }
 

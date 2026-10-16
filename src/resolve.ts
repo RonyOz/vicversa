@@ -9,6 +9,8 @@ export type ResolvedItem = {
   href?: string;
   /** Everything after the lead on the same line, e.g. " - Andina University". */
   rest?: string;
+  /** The same thing without punctuation — organisation, issuer or project name — for templates that lay it out on its own. */
+  secondary?: string;
   /** Right-aligned on the title line: a date or a date range. */
   meta?: string;
   /** Ids travel with the text so the overflow report can name what to cut. */
@@ -173,6 +175,7 @@ export function resolveDocument(app: Application, catalog: LoadedCatalog): Resol
             lead: project.label,
             href: project.href,
             rest: ` - ${t(project.name)}`,
+            secondary: t(project.name),
             bullets: bullets.map((bulletId) => ({ id: bulletId, text: bulletText(bulletId) })),
           }),
           warnings,
@@ -187,6 +190,7 @@ export function resolveDocument(app: Application, catalog: LoadedCatalog): Resol
             id: job.id,
             lead: t(job.role),
             rest: ` - ${t(job.org)}`,
+            secondary: t(job.org),
             meta: formatRange(job.start, job.end, lang, label("present")),
             bullets: bullets.map((bulletId) => ({ id: bulletId, text: bulletText(bulletId) })),
           }),
@@ -202,6 +206,7 @@ export function resolveDocument(app: Application, catalog: LoadedCatalog): Resol
             id: cert.id,
             lead: t(cert.name),
             rest: ` - ${t(cert.issuer)}`,
+            secondary: t(cert.issuer),
             meta: `${label("obtained")} ${formatMonth(cert.date, lang, "short")}`,
             bullets: bullets.map((bulletId) => ({ id: bulletId, text: bulletText(bulletId) })),
           }),

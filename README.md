@@ -101,80 +101,91 @@ metadata:
   language: en
 
 content:
-  summary: distributed_ai        # from catalog/summaries.yaml
+  summary: backend_platform      # from catalog/summaries.yaml
   sections: [skills, experience, projects, education, certifications]
   experience:
-    - northwind.ddd
-    - northwind.adapter
+    - northwind.payments
+    - northwind.observability
 ```
 
 Then `pnpm cv render 2026-08-acme`.
 
 ## The one-page rule
 
-A4 leaves **785.9pt** of vertical space. Body text is 10pt on a 13.5pt line, so
-the whole budget is about **58 lines**. That's the currency.
+Every template declares its page and type scale in points, so the budget is
+exact: with `harvard` (US Letter, 10pt on a 12.2pt line) a page holds about
+**58 lines**. That's the currency.
 
 When a CV goes over, the validator prices every way out and sorts them cheapest
 first — including summary swaps, which cost no content at all:
 
 ```
-✗ baseline-en-fullstack
+✗ baseline-en
 
   Over by 16.0pt — about 1.2 body lines.
 
-  Smallest single cut that fixes it: andina_monitor.students (bullet, 2 lines, frees 27.0pt)
+  Smallest single cut that fixes it: data_ml (summary, swap, no content lost, frees 27.0pt)
 
   Options, cheapest first:
-      summary cloud_architect                13.5pt  swap, no content lost
-    ✓ bullet andina_monitor.students          27.0pt  2 lines
-    ✓ summary ux_architecture                27.0pt  swap, no content lost
-    ✓ bullet northwind.adapter                40.5pt  3 lines
+      summary fullstack_product              13.5pt  swap, no content lost
+      bullet ledger.sync                     13.5pt  1 line
+    ✓ summary data_ml                        27.0pt  swap, no content lost
+    ✓ bullet andina_ta.students              27.0pt  2 lines
 ```
 
 Heights are measured in the same browser that prints the PDF. Character counts
 and font tables both lie about where a justified line breaks, and a wrong line
 break is a wrong page height.
 
-## Layout
+## Your data lives outside the tool
 
-`theme.yaml` holds every measurement — page size, margins, type scale, the
-spacing between each kind of block. The stylesheet contains none: it reads CSS
-custom properties generated from that file. Tuning the design means editing
-YAML, which is what will let an editing UI change the layout later without
-anyone hand-writing CSS.
+The repository is the tool. Your catalog, applications, templates and rendered
+PDFs live in a folder of your own — usually a private git repo — pointed to by
+`VICVERSA_HOME`:
 
-Every value in it was measured off `data/CV - ALEX RIVERA.pdf`, not guessed.
-Canva positions each text block as an independent frame, so the original drifts
-1–6pt between blocks meant to align; `theme.yaml` records the normalized intent
-and notes the observed range beside it.
+```
+my-cv-data/
+  vicversa.yaml        # template: harvard
+  catalog/*.yaml       # the single source of truth
+  applications/*.yaml  # one file per CV; git history is the audit trail
+  templates/<id>/      # optional: your own template
+  out/                 # rendered PDFs
+```
 
-Fonts are vendored into `assets/fonts/` and embedded as data URIs. The rendered
-page makes no external requests, so it cannot silently fall back to a system
-font and reflow every line.
+Put `VICVERSA_HOME=/path/to/my-cv-data` in a `.env` at the repo root (ignored by
+git); every script loads it. Without it, the bundled demo in `examples/demo/`
+(a fictional profile, also the fixture for every test) is used, so a fresh
+clone works out of the box.
+
+## Templates
+
+Pick one in `vicversa.yaml` and stay with it:
+
+| Template | Look |
+|---|---|
+| `harvard` (default) | Harvard career-office classic: one column, Tinos (Times metrics), small-caps headings over a rule, US Letter |
+| `classic-ats` | Plain one-column layout any applicant tracking system parses: Arimo (Arial metrics), standard headings, A4 |
+
+Whatever the template, vicversa measures the page in Chromium: it either fits
+on one page or the build stops and tells you what to cut.
+
+**Your own template** is a folder `templates/<id>/` in your data with a
+`theme.yaml` (every measurement, in points) and a `template.tsx` that
+default-exports a `TemplateDefinition` from `"vicversa/template"`. Start by
+copying `src/templates/harvard/`. The one rule: mark what can be measured with
+`measure.content`, `measure.section(id)`, `measure.item(id)`,
+`measure.bullet(id)` and render `<SummaryProbes>` — that is what gives your
+design the one-page guarantee. Fonts must be vendored in `assets/fonts/`
+(`scripts/fetch-fonts.ts`).
 
 ## Layout of the repo
 
 | Path | What's in it |
 |---|---|
-| `catalog/` | Your data. The single source of truth. |
-| `applications/` | One file per CV sent. Git history is the audit trail. |
-| `theme.yaml` | Every measurement, as data. |
-| `src/template/` | The React template and print stylesheet. |
-| `src/render.ts` | Chromium: measures the layout and prints the PDF. |
-| `src/validate.ts` | Decides whether it fits, and what to cut if not. |
+| `src/templates/` | The template contract (`kit.tsx`), registry, bundled templates |
+| `src/render.ts` | Chromium: measures the layout and prints the PDF |
+| `src/validate.ts` | Decides whether it fits, and what to cut if not |
+| `src/ops.ts` | Every operation as data — shared by the CLI, MCP server and panel |
+| `src/ui/` | The panel: JSON API + React app |
+| `examples/demo/` | Fictional data folder: the demo and the test fixture |
 | `assets/fonts/` | Vendored woff2. Committed on purpose. |
-| `data/` | The original Canva export, kept as the design reference. |
-
-## Still to write
-
-- **`andina_fullstack` has no description.** In the Canva export it borrowed
-  `andina_software_dev`'s and appended "in backend and frontend", which is how two
-  separate certifications came to look like one. Applications select it bare, so
-  it renders as a header until a real description exists.
-- **`contact_tracing_devops`** has no link. The Canva export pointed it at the
-  `ice-voting-system` repo, but the text describes a different project.
-- Bullets marked `TRANSLATED:` were written for this catalog and have never been
-  proofread by a human.
-
-Northwind's end date (`2026-09`) is an estimate.

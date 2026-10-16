@@ -1,0 +1,41 @@
+# Fictional application to Cyberdyne (Desarrollador Backend).
+metadata:
+  company: Cyberdyne
+  role: "Desarrollador Backend"
+  url: https://jobs.example.com/2026-08-cyberdyne-desarrollador-backend
+  language: es
+
+content:
+  summary: backend_platform
+  contact: [email, phone, github, linkedin]
+  sections: [skills, experience, projects, education, certifications]
+
+  skills:
+    - group: languages
+      items: [java, typescript, python, sql]
+    - group: backend
+      items: [spring, node, fastapi]
+    - group: cloud
+      items: [aws, terraform, docker, gha]
+
+  experience:
+    - northwind.payments
+    - northwind.observability
+    - northwind.iac
+    - fabrikam.api
+    - andina_ta.students
+
+  projects:
+    - routewise.solver
+    - ledger.tests
+
+  education:
+    - andina
+
+  certifications:
+    - aws_ccp.scope
+    - psm1
+
+tracking:
+  - { date: "2026-08-20", stage: applied }
+  - { date: "2026-08-29", stage: rejected, note: "Primera etapa" }

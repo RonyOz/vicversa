@@ -15,7 +15,7 @@ for (const [name, [d, m]] of Object.entries(cases)) {
 }
 
 test("assess reports spare room when it fits", () => {
-  const a = assess(doc("distributed_ai"), fits, theme);
+  const a = assess(doc("backend_platform"), fits, theme);
   assert.equal(a.ok, true);
   assert.equal(a.overflow, -15.9);
   assert.ok(Math.abs(a.spare - 15.9) < 1e-9);
@@ -25,18 +25,18 @@ test("assess reports spare room when it fits", () => {
 });
 
 test("assess lists cuts cheapest first and the smallest one that is enough", () => {
-  const a = assess(doc("distributed_ai"), over, theme);
+  const a = assess(doc("backend_platform"), over, theme);
   assert.equal(a.ok, false);
   assert.deepEqual(
     a.cuts.map((c) => `${c.kind}:${c.id}`),
     [
-      "summary:cloud_architect", "bullet:routewise.arch", "summary:ux_architecture",
-      "bullet:andina_monitor.students", "bullet:northwind.ddd", "item:routewise", "item:northwind",
+      "summary:fullstack_product", "bullet:ledger.sync", "summary:data_ml",
+      "bullet:andina_ta.students", "bullet:northwind.payments", "item:ledger", "item:northwind",
     ],
   );
-  assert.equal(a.smallestCut?.id, "ux_architecture");
-  assert.equal(a.cuts.find((c) => c.id === "northwind.ddd")?.enough, true);
-  assert.equal(a.cuts.find((c) => c.id === "routewise.arch")?.enough, false);
+  assert.equal(a.smallestCut?.id, "data_ml");
+  assert.equal(a.cuts.find((c) => c.id === "northwind.payments")?.enough, true);
+  assert.equal(a.cuts.find((c) => c.id === "ledger.sync")?.enough, false);
 });
 
 test("assess says no single cut is enough", () => {
@@ -44,7 +44,7 @@ test("assess says no single cut is enough", () => {
 });
 
 test("assess: clipped skill rows make it not ok even when it fits", () => {
-  const a = assess(doc("distributed_ai", ["w"]), skillClipped, theme);
+  const a = assess(doc("backend_platform", ["w"]), skillClipped, theme);
   assert.equal(a.ok, false);
   assert.deepEqual(a.skillOverflows, [{ label: "DevOps", overflow: 4.2 }]);
   assert.deepEqual(a.warnings, ["w"]);
