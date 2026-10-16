@@ -24,31 +24,33 @@ export function Summary() {
           <p>{longDate(data.today)} · espera de {data.staleDays} días antes de contar como "sin respuesta"</p>
         </div>
       </header>
-      <Kpis data={data} />
-      <FunnelCard data={data} />
-      <div className="grid-2">
-        <PaceCard data={data} />
-        <section className="card">
-          <h2>Actividad reciente</h2>
-          <p className="lede">Últimos movimientos registrados.</p>
-          <ul className="feed">
-            {activity.map(({ row, event }, i) => (
-              <li key={`${row.name}-${i}`}>
-                <StageIcon stage={event.stage} />
-                <div>
-                  <Link to={`/convocatorias/${encodeURIComponent(row.name)}`} viewTransition>
-                    {row.company ?? row.name}
-                  </Link>
-                  <div className="sub">
-                    {STAGE_LABELS[event.stage]}
-                    {event.note ? ` · ${event.note}` : ""} · {row.role}
+      <div className="stack">
+        <Kpis data={data} />
+        <FunnelCard data={data} />
+        <div className="grid-2">
+          <PaceCard data={data} />
+          <section className="card">
+            <h2>Actividad reciente</h2>
+            <p className="lede">Últimos movimientos registrados.</p>
+            <ul className="feed">
+              {activity.map(({ row, event }, i) => (
+                <li key={`${row.name}-${i}`}>
+                  <StageIcon stage={event.stage} />
+                  <div>
+                    <Link to={`/convocatorias/${encodeURIComponent(row.name)}`} viewTransition>
+                      {row.company ?? row.name}
+                    </Link>
+                    <div className="sub">
+                      {STAGE_LABELS[event.stage]}
+                      {event.note ? ` · ${event.note}` : ""} · {row.role}
+                    </div>
                   </div>
-                </div>
-                <span className="muted num" style={{ fontSize: 12 }}>{shortDate(event.date)}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
+                  <span className="muted num" style={{ fontSize: 12 }}>{shortDate(event.date)}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
       </div>
     </>
   );

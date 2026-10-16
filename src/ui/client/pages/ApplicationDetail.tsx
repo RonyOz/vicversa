@@ -65,7 +65,7 @@ export function ApplicationDetail() {
       </header>
 
       <div className="grid-2">
-        <div>
+        <div className="stack">
           <section className="card">
             <h2>Historia</h2>
             <p className="lede">
