@@ -31,7 +31,7 @@ is not an event yet: say so and offer to record it when it happens.
 ## Recording an event
 
 1. Identify the application: `list_applications` with `query` = company (or
-   role). If more than one matches (several Initech, Dunder Mifflin, Fabrikam…), ask
+   role). If more than one matches (several roles at the same company), ask
    which one, listing name + role. Never guess.
 2. Map the message to a stage (table above) and to the date it **happened**
    (ask if "last Tuesday"-style dates are ambiguous; default is today).
@@ -54,8 +54,8 @@ The panel (`pnpm ui`) offers the same as "reabrir" / "deshacer".
 Call `get_status` (or `get_application` for one timeline) and summarize from
 its numbers:
 
-- Lead with pace and the funnel **with denominators**: "30 enviadas: 9 aún en
-  espera, 21 sin respuesta, 0 respondieron".
+- Lead with pace and the funnel **with denominators**, in the user's language:
+  "30 sent: 9 still waiting, 21 no response, 0 responded".
 - Never collapse waiting and silence into rejection. Do not say "te han
   rechazado en muchas" when most are waiting or unanswered.
 - No comparisons against market averages: there is no reliable data and it

@@ -7,7 +7,7 @@ description: >-
   Triggers: "convocatoria", "vacante", "hoja de vida", "CV para esta
   convocatoria", "armar/aplicar CV", "actualizar CV/aplicación", "resume", "job
   posting", "apply to this role", "update this application". Requires the
-  vicversa repo (catalog/ and applications/ YAML) as working directory.
+  vicversa repo; data (catalog/ and applications/ YAML) lives in VICVERSA_HOME.
 ---
 
 # cv-recruiter
@@ -22,7 +22,7 @@ user gates are mandatory: **G1** before writing new content to the catalog,
 **G2** before the job counts as done.
 
 **Creating vs updating:** if the user points at an existing
-`applications/*.yaml` (including a `general-es`/`general-en` one) instead of
+`applications/*.yaml` (including a general-purpose baseline) instead of
 asking for a brand-new file, load it as the starting point and run F1 against
 it — the delta is what changes, not a from-scratch rebuild. Skip F2 for
 anything the file already covers correctly. Loading an existing file does
@@ -58,10 +58,11 @@ content) and real unknowns (does the user have X). A judgment call phrased
 back to the user as "do you want A or B?" when both are defensible is a red
 flag — you're polling instead of recruiting.
 
-## Contexto fijo del repo (do not re-derive)
+## Fixed repo context (do not re-derive)
 
-- Data contract and formats: `SPEC.md` §5. Data lives in `catalog/*.yaml`;
-  every CV is an `applications/*.yaml` (git is the audit trail).
+- Data contract and formats: `ARCHITECTURE.md` and `src/schema.ts`. Data lives
+  in the data folder (`VICVERSA_HOME`, see README): `catalog/*.yaml`, and every
+  CV is an `applications/*.yaml` (git is the audit trail). Edit files there.
 - **Golden rule of selections (bullet-first):** `experience`, `projects`,
   `certifications` are lists of **bullet ids in render order**; the parent item
   is derived from each bullet's owner. A bare item id (`northwind`) includes the
@@ -133,7 +134,7 @@ final selection in F3.
    - `skills.yaml`: `id`, `name`, `detail`, `tags`, and suggested group (new
      group id + bilingue label only if no existing group fits).
    - `projects.yaml` / `experiences.yaml`: the full entry with bullets.
-   - `summaries.yaml`: a new `contoso_arch_ai`-style summary only if no
+   - `summaries.yaml`: a new posting-specific summary only if no
      existing summary matches the convocatoria angle.
 3. **Anti-invention rule:** never fabricate experience. If a gap demands real
    experience the catalog does not back and the user has not declared, do not
@@ -154,7 +155,7 @@ final selection in F3.
    from them.
 
 Rationale comment in each new catalog entry, following repo style (see
-`contoso_arch_ai`).
+existing summaries).
 
 ### F3 — Assemble the application
 
@@ -215,7 +216,7 @@ Selection rules:
   ("quiero", "espero poder", "I want to truly...", "I hope to contribute").
   Confidence over supplication, same bar as the technical claims.
 - **Summary is the profile, not a digest of the page.** Write it in the
-  voice of the baselines (`ux_architecture`, `fullstack_cloud`): who the
+  voice of the existing baseline summaries: who the
   candidate is, their broad foundation, what motivates them, and how they
   work — tuned to the posting's angle. Read the draft against the whole
   rendered CV, not against the posting alone, and cut:
@@ -239,8 +240,8 @@ Selection rules:
   `detail`, e.g. `sql` detail `Oracle, PL/SQL`) instead of stacking separate
   ones.
 - **Primary inspiration is the repo's own related applications** (same sector,
-  stack, or seniority — e.g. for a Java/cloud backend call, look at how
-  Contoso/capgeni/Fabrikam selected). `general-es`/`general-en` are also
+  stack, or seniority — e.g. for a Java/cloud backend call, look at how the
+  previous Java/cloud applications selected). General-purpose baselines are also
   valid references, not out-of-scope: they're the max-coverage baseline of the
   profile and a fine source for phrasing or a default selection when the
   convocatoria has no closer match. External material is secondary to all of
@@ -307,7 +308,7 @@ manually. On changes → return to the affected phase, apply, regenerate
 | Check if a CV fits one page | `validate` (`names` optional; none = all) |
 | Build the PDF | `render` (`force` only to bypass one-page rule — never) |
 | Fix an overflow | Apply validator's single cheapest fix, re-render (max 3 tries, see F4) |
-| New posting, no close match in `applications/` | Base selection on `general-es`/`general-en` |
+| New posting, no close match in `applications/` | Base selection on a general-purpose baseline application |
 | Editing an existing application | Load it, diff against F1 analysis, touch only the delta |
 
 ## Common mistakes
