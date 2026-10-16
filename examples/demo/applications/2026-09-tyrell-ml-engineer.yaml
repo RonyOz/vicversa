@@ -37,4 +37,4 @@ content:
 
 tracking:
   - { date: "2026-09-18", stage: applied }
-  - { date: "2026-09-30", stage: withdrawn, note: "No me interesó" }
+  - { date: "2026-09-30", stage: withdrawn, note: "Lost interest" }

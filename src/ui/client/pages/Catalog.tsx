@@ -4,15 +4,17 @@ import { Link, useSearchParams } from "react-router";
 import type { Language } from "../../../schema.js";
 import type { PieceKind } from "../../../usage.js";
 import { useCatalog } from "../api.js";
-import { catalogEntries, filterEntries, kindFromSlug, KIND_LABELS, KIND_SLUGS, pieceHref } from "../catalog-view.js";
+import { catalogEntries, filterEntries, kindFromSlug, KIND_KEYS, KIND_SLUGS, pieceHref } from "../catalog-view.js";
+import { useI18n } from "../i18n.js";
 import { PageError, PageLoading } from "./states.js";
 
 const KINDS = Object.keys(KIND_SLUGS) as PieceKind[];
 
 /** Usage as a small bar against the most-used piece of the same kind. */
 function Uses({ count, max }: { count: number; max: number }) {
+  const { t } = useI18n();
   return (
-    <span className={`uses${count === 0 ? " none" : ""}`} data-tip={count === 0 ? "Ningún CV la usa" : `Aparece en ${count} ${count === 1 ? "CV" : "CVs"}`}>
+    <span className={`uses${count === 0 ? " none" : ""}`} data-tip={count === 0 ? t("catalog.nobody") : t("catalog.appearsIn", count)}>
       <i style={{ ["--w" as string]: `${max ? (count / max) * 100 : 0}%` }} />
       <span className="num">{count}</span>
     </span>
@@ -20,11 +22,12 @@ function Uses({ count, max }: { count: number; max: number }) {
 }
 
 export function Catalog() {
+  const { t } = useI18n();
   const { data, error } = useCatalog();
   const [params, setParams] = useSearchParams();
-  const kind = kindFromSlug(params.get("tipo") ?? undefined);
-  const language: Language = params.get("idioma") === "en" ? "en" : "es";
-  const unused = params.get("sin-usar") === "1";
+  const kind = kindFromSlug(params.get("kind") ?? undefined);
+  const language: Language = params.get("lang") === "en" ? "en" : "es";
+  const unused = params.get("unused") === "1";
   const [query, setQuery] = useState(params.get("q") ?? "");
 
   const set = (key: string, value: string | null) => {
@@ -46,12 +49,12 @@ export function Catalog() {
     <>
       <header className="page-head">
         <div>
-          <h1>Catálogo</h1>
-          <p>La fuente de verdad de cada hoja de vida. Cuántos CVs usan cada pieza, y cuáles nunca se usaron.</p>
+          <h1>{t("catalog.title")}</h1>
+          <p>{t("catalog.lede")}</p>
         </div>
         <div className="filters">
           {(["es", "en"] as const).map((l) => (
-            <button type="button" key={l} className={`chip${language === l ? " on" : ""}`} aria-pressed={language === l} onClick={() => set("idioma", l === "es" ? null : l)}>
+            <button type="button" key={l} className={`chip${language === l ? " on" : ""}`} aria-pressed={language === l} onClick={() => set("lang", l === "es" ? null : l)}>
               {l.toUpperCase()}
             </button>
           ))}
@@ -59,10 +62,10 @@ export function Catalog() {
       </header>
 
       <div className="toolbar">
-        <nav className="tabs" aria-label="Tipo de pieza">
+        <nav className="tabs" aria-label={t("catalog.title")}>
           {KINDS.map((k) => (
-            <button type="button" key={k} className={kind === k ? "active" : ""} onClick={() => set("tipo", k === "summary" ? null : KIND_SLUGS[k])}>
-              {KIND_LABELS[k]}
+            <button type="button" key={k} className={kind === k ? "active" : ""} onClick={() => set("kind", k === "summary" ? null : KIND_SLUGS[k])}>
+              {t(KIND_KEYS[k])}
             </button>
           ))}
         </nav>
@@ -71,27 +74,25 @@ export function Catalog() {
           <input
             type="search"
             value={query}
-            placeholder={`Buscar en ${KIND_LABELS[kind].toLowerCase()}…`}
-            aria-label="Buscar"
+            placeholder={t("catalog.searchIn", t(KIND_KEYS[kind]))}
+            aria-label={t("search.label")}
             onChange={(e) => {
               setQuery(e.target.value);
               set("q", e.target.value || null);
             }}
           />
         </div>
-        <button type="button" className={`chip${unused ? " on" : ""}`} aria-pressed={unused} onClick={() => set("sin-usar", unused ? null : "1")}>
-          Sin usar <span className="num">{unusedCount}</span>
+        <button type="button" className={`chip${unused ? " on" : ""}`} aria-pressed={unused} onClick={() => set("unused", unused ? null : "1")}>
+          {t("catalog.unused")} <span className="num">{unusedCount}</span>
         </button>
       </div>
 
-      <p className="result-count">
-        {shown.length} de {all.length} · ordenadas por uso
-      </p>
+      <p className="result-count">{t("catalog.count", shown.length, all.length)}</p>
 
       {shown.length === 0 ? (
         <div className="card empty">
           <SearchX />
-          <p>Nada coincide.</p>
+          <p>{t("catalog.empty")}</p>
         </div>
       ) : kind === "skill" ? (
         <div className="card skill-grid">
@@ -99,7 +100,7 @@ export function Catalog() {
             <Link key={e.id} to={pieceHref(kind, e.id)} className="skill-cell" viewTransition>
               <span>
                 <strong>{e.title}</strong>
-                {e.subtitle && <small> · {e.subtitle}</small>}
+                {e.subtitle && <small> ({e.subtitle})</small>}
               </span>
               <Uses count={e.count} max={max} />
             </Link>
@@ -107,8 +108,8 @@ export function Catalog() {
         </div>
       ) : (
         <div className="list">
-          {shown.map((e, i) => (
-            <Link key={e.id} to={pieceHref(kind, e.id)} className="catalog-row" viewTransition style={{ ["--i" as string]: Math.min(i, 20) }}>
+          {shown.map((e) => (
+            <Link key={e.id} to={pieceHref(kind, e.id)} className="catalog-row" viewTransition>
               <div className="piece-head">
                 <strong className={kind === "summary" ? "num" : ""}>{e.title}</strong>
                 <Uses count={e.count} max={max} />
@@ -120,7 +121,7 @@ export function Catalog() {
                   {e.bullets.map((b) => (
                     <li key={b.id} className={b.count === 0 ? "unused" : ""}>
                       <span className="clamp-1">{b.text}</span>
-                      <span className="num muted" data-tip={b.count === 0 ? `${b.id}\nningún CV lo usa` : `${b.id}\nen ${b.count} ${b.count === 1 ? "CV" : "CVs"}`}>
+                      <span className="num muted" data-tip={`${b.id}\n${b.count === 0 ? t("catalog.nobody") : t("catalog.appearsIn", b.count)}`}>
                         {b.count}
                       </span>
                     </li>

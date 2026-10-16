@@ -1,17 +1,20 @@
 import { ArrowLeft, ChevronRight, ExternalLink, FileText, RotateCcw, Undo2 } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router";
+import type { TrackingEvent } from "../../../schema.js";
 import { daysBetween } from "../../../tracking.js";
 import { useApplication, useDashboard, useUndo } from "../api.js";
 import { CvPreview } from "../components/CvPreview.js";
 import { EventForm } from "../components/EventForm.js";
 import { longDate, shortDate } from "../dates.js";
-import { StageIcon, STAGE_LABELS, STATE_LABELS } from "../labels.js";
+import { useI18n } from "../i18n.js";
+import { StageIcon, STAGE_KEYS, STATE_KEYS } from "../labels.js";
 import { useToast } from "../toast.js";
 import { PageError, PageLoading } from "./states.js";
 
 export function ApplicationDetail() {
+  const { t, lang } = useI18n();
   const name = decodeURIComponent(useParams()["name"] ?? "");
-  const back = (useLocation().state as { back?: string } | null)?.back ?? "/convocatorias";
+  const back = (useLocation().state as { back?: string } | null)?.back ?? "/applications";
   const detail = useApplication(name);
   const dashboard = useDashboard();
   const undo = useUndo();
@@ -28,13 +31,13 @@ export function ApplicationDetail() {
   const last = events.at(-1);
   const canUndo = (application.tracking?.length ?? 0) > 1;
   const cvUrl = `/api/cv/${encodeURIComponent(name)}.html`;
+  const describe = (e: TrackingEvent) => `${t(STAGE_KEYS[e.stage]).toLowerCase()} ${shortDate(e.date, lang)}`;
 
   const runUndo = () =>
     undo.mutate(
       { name },
       {
-        onSuccess: (r) =>
-          toast({ kind: "ok", text: `Quitado: ${STAGE_LABELS[r.removed.stage].toLowerCase()} del ${shortDate(r.removed.date)}` }),
+        onSuccess: (r) => toast({ kind: "ok", text: t("detail.removed", describe(r.removed)) }),
         onError: (e) => toast({ kind: "error", text: e.message }),
       },
     );
@@ -42,23 +45,23 @@ export function ApplicationDetail() {
   return (
     <>
       <Link to={back} className="back" viewTransition>
-        <ArrowLeft size={15} /> Convocatorias
+        <ArrowLeft size={15} /> {t("detail.back")}
       </Link>
       <header className="page-head detail-head">
         <div>
           <h1>
             {meta.company ?? name}
-            {summary && <span className={`badge ${summary.state}`}>{STATE_LABELS[summary.state]}</span>}
+            {summary && <span className={`badge ${summary.state}`}>{t(STATE_KEYS[summary.state])}</span>}
           </h1>
           <p>{meta.role}</p>
           <div className="links">
             {meta.url && (
               <a className="btn" href={meta.url} target="_blank" rel="noreferrer">
-                <ExternalLink /> Ver convocatoria
+                <ExternalLink /> {t("detail.posting")}
               </a>
             )}
             <Link className="btn" to={`/cvs/${encodeURIComponent(name)}`} viewTransition>
-              <FileText /> Ver CV y sus piezas
+              <FileText /> {t("detail.cv")}
             </Link>
           </div>
         </div>
@@ -67,22 +70,29 @@ export function ApplicationDetail() {
       <div className="grid-2">
         <div className="stack">
           <section className="card">
-            <h2>Historia</h2>
+            <h2>{t("detail.history")}</h2>
             <p className="lede">
               {events.length > 0
-                ? `Aplicada el ${longDate(events[0]!.date)}${summary ? ` · ${daysBetween(events[0]!.date, summary.state === "closed" ? summary.lastDate : today)} días de proceso` : ""}`
-                : "Plantilla o borrador: sin seguimiento."}
+                ? t(
+                    "detail.since",
+                    longDate(events[0]!.date, lang),
+                    summary ? daysBetween(events[0]!.date, summary.state === "closed" ? summary.lastDate : today) : null,
+                  )
+                : t("detail.untracked")}
             </p>
             <ol className="timeline">
               {events.map((event, i) => (
-                <li key={`${event.date}-${i}`} style={{ animationDelay: `${i * 40}ms` }}>
+                <li key={`${event.date}-${i}`}>
                   <StageIcon stage={event.stage} />
                   <div>
-                    <div className="what">{STAGE_LABELS[event.stage]}{event.note ? ` · ${event.note}` : ""}</div>
-                    <div className="when">{longDate(event.date)}</div>
+                    <div className="what">
+                      {t(STAGE_KEYS[event.stage])}
+                      {event.note ? `: ${event.note}` : ""}
+                    </div>
+                    <div className="when">{longDate(event.date, lang)}</div>
                   </div>
                   {i > 0 ? (
-                    <span className="gap" data-tip={`${daysBetween(events[i - 1]!.date, event.date)} días\ndespués de ${STAGE_LABELS[events[i - 1]!.stage].toLowerCase()}`}>
+                    <span className="gap" data-tip={t("detail.gap", daysBetween(events[i - 1]!.date, event.date), t(STAGE_KEYS[events[i - 1]!.stage]))}>
                       +{daysBetween(events[i - 1]!.date, event.date)}d
                     </span>
                   ) : (
@@ -92,8 +102,8 @@ export function ApplicationDetail() {
               ))}
               {summary && summary.state !== "closed" && (
                 <li>
-                  <span className="stage-icon st-applied" aria-hidden>…</span>
-                  <div className="waiting">Esperando desde hace {summary.daysSince} días</div>
+                  <span className="stage-icon st-waiting" aria-hidden />
+                  <div className="waiting">{t("detail.waitingFor", summary.daysSince)}</div>
                   <span />
                 </li>
               )}
@@ -101,14 +111,14 @@ export function ApplicationDetail() {
             {canUndo && last && (
               <button type="button" className="btn ghost" onClick={runUndo} disabled={undo.isPending}>
                 {summary?.state === "closed" ? <RotateCcw /> : <Undo2 />}
-                {summary?.state === "closed" ? "Reabrir" : "Deshacer"}: quitar «{STAGE_LABELS[last.stage].toLowerCase()} {shortDate(last.date)}»
+                {summary?.state === "closed" ? t("detail.reopen", describe(last)) : t("detail.undo", describe(last))}
               </button>
             )}
           </section>
 
           {summary && summary.state !== "closed" && (
             <section className="card">
-              <h2>Registrar evento</h2>
+              <h2>{t("detail.record")}</h2>
               <EventForm key={name} name={name} events={events} today={today} />
             </section>
           )}
@@ -117,7 +127,7 @@ export function ApplicationDetail() {
             <section className="card">
               <details className="fold">
                 <summary>
-                  <ChevronRight /> Notas de la aplicación
+                  <ChevronRight /> {t("detail.notes")}
                 </summary>
                 <p className="notes">{meta.notes}</p>
               </details>
@@ -126,9 +136,9 @@ export function ApplicationDetail() {
         </div>
 
         <section className="card">
-          <h2>Hoja de vida enviada</h2>
-          <p className="lede">La página tal como se imprime el PDF ({meta.language.toUpperCase()}).</p>
-          <CvPreview src={cvUrl} title={`CV para ${meta.company ?? name}`} />
+          <h2>{t("detail.sentCv")}</h2>
+          <p className="lede">{t("detail.sentCvLede", meta.language.toUpperCase())}</p>
+          <CvPreview src={cvUrl} title={meta.company ?? name} />
         </section>
       </div>
     </>

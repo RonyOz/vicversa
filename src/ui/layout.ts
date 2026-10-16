@@ -45,7 +45,7 @@ export interface TimeAxis {
   ticks: { date: string; x: number; label: string }[];
 }
 
-export function timeAxis(start: string, end: string, width: number): TimeAxis {
+export function timeAxis(start: string, end: string, width: number, months: readonly string[] = MONTHS): TimeAxis {
   const span = Math.max(1, daysBetween(start, end));
   const x = (date: string) => (daysBetween(start, date) / span) * width;
   const ticks: TimeAxis["ticks"] = [];
@@ -55,7 +55,7 @@ export function timeAxis(start: string, end: string, width: number): TimeAxis {
     if (month > 12) [year, month] = [year + 1, 1];
     const date = `${year}-${String(month).padStart(2, "0")}-01`;
     if (date > end) break;
-    ticks.push({ date, x: x(date), label: MONTHS[month - 1]! });
+    ticks.push({ date, x: x(date), label: months[month - 1]! });
   }
   return { x, ticks };
 }
@@ -103,6 +103,7 @@ export function calendarGrid(
   timelines: readonly (readonly TrackingEvent[])[],
   today: string,
   weeks: number,
+  months: readonly string[] = MONTHS,
 ): { weeks: CalendarWeek[]; max: number } {
   const counts = new Map<string, number>();
   for (const events of timelines) {
@@ -120,7 +121,7 @@ export function calendarGrid(
     });
     const end = days[6]!.date;
     const hasFirst = days.find((day) => day.date.endsWith("-01"));
-    const monthOf = (date: string) => MONTHS[Number(date.slice(5, 7)) - 1]!;
+    const monthOf = (date: string) => months[Number(date.slice(5, 7)) - 1]!;
     result.push({
       start,
       range: `${Number(start.slice(8))}–${Number(end.slice(8))}`,

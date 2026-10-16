@@ -2,7 +2,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { resolve } from "node:path";
 import {
   DEFAULT_STALE_DAYS, DEFAULT_WEEKS, getApplication, getCatalogExplorer, getCvDetail, getCvHtml, getCvList, getDashboard,
-  getFit, trackEvent, undoLastEvent,
+  getFit, getInfo, trackEvent, undoLastEvent,
 } from "../ops.js";
 import { localToday } from "../tracking.js";
 
@@ -49,6 +49,7 @@ async function api(request: IncomingMessage, response: ServerResponse, today: st
     if (method === "GET" && application) {
       return send(response, 200, await getApplication(application[1]!, { today }));
     }
+    if (method === "GET" && path === "/api/info") return send(response, 200, await getInfo());
     if (method === "GET" && path === "/api/cvs") return send(response, 200, { cvs: await getCvList(today) });
     const cvDetail = /^\/api\/cvs\/([^/]+)$/.exec(path);
     if (method === "GET" && cvDetail) return send(response, 200, await getCvDetail(cvDetail[1]!, today));

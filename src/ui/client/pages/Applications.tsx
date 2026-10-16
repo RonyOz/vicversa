@@ -1,32 +1,27 @@
-import { SearchX, Search, X } from "lucide-react";
+import { Search, SearchX, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import type { Stage } from "../../../schema.js";
 import { timeAxis } from "../../layout.js";
 import { useDashboard } from "../api.js";
 import { TimelineTrack } from "../components/charts.js";
-import { shortDate } from "../dates.js";
-import { STAGE_ICONS, STAGE_LABELS } from "../labels.js";
+import { monthNames, shortDate } from "../dates.js";
+import { useI18n, type MessageKey } from "../i18n.js";
+import { STAGE_ICONS, STAGE_KEYS } from "../labels.js";
 import { applyQuery, parseQuery, tabCounts, toSearch, type ListQuery, type SortKey, type Tab } from "../query.js";
 import { PageError, PageLoading } from "./states.js";
 
-const TAB_LABELS: Record<Tab, string> = {
-  activas: "Activas",
-  "sin-respuesta": "Sin respuesta",
-  cerradas: "Cerradas",
-  todas: "Todas",
+const TAB_KEYS: Record<Tab, MessageKey> = { active: "tab.active", stale: "tab.stale", closed: "tab.closed", all: "tab.all" };
+const SORT_KEYS: Record<SortKey, MessageKey> = {
+  recent: "sort.recent",
+  waiting: "sort.waiting",
+  applied: "sort.applied",
+  company: "sort.company",
 };
-
-const SORT_LABELS: Record<SortKey, string> = {
-  reciente: "Último movimiento",
-  dias: "Más tiempo esperando",
-  aplicada: "Fecha de aplicación",
-  empresa: "Empresa (A–Z)",
-};
-
 const STAGE_FILTERS: Stage[] = ["applied", "assessment", "interview", "offer", "rejected", "withdrawn"];
 
 export function Applications() {
+  const { t, lang } = useI18n();
   const { data, error } = useDashboard();
   const [params, setParams] = useSearchParams();
   const query = parseQuery(params);
@@ -60,8 +55,8 @@ export function Applications() {
   const rows = useMemo(() => (data ? applyQuery(data.rows, query) : []), [data, params]);
   const axis = useMemo(() => {
     const first = data?.rows.flatMap((r) => r.events.map((e) => e.date)).sort()[0];
-    return data && first ? timeAxis(first, data.today, 100) : null;
-  }, [data]);
+    return data && first ? timeAxis(first, data.today, 100, monthNames(lang, "short")) : null;
+  }, [data, lang]);
 
   if (error) return <PageError error={error} />;
   if (!data || !axis) return <PageLoading />;
@@ -72,14 +67,14 @@ export function Applications() {
     <>
       <header className="page-head">
         <div>
-          <h1>Convocatorias</h1>
-          <p>{data.rows.length} con seguimiento · clic en una para ver su historia y registrar eventos</p>
+          <h1>{t("apps.title")}</h1>
+          <p>{t("apps.lede", data.rows.length)}</p>
         </div>
       </header>
 
       <div className="toolbar">
-        <nav className="tabs" aria-label="Estado">
-          {(Object.keys(TAB_LABELS) as Tab[]).map((tab) => (
+        <nav className="tabs" aria-label={t("apps.title")}>
+          {(Object.keys(TAB_KEYS) as Tab[]).map((tab) => (
             <Link
               key={tab}
               to={toSearch({ ...query, tab }) || "?"}
@@ -87,7 +82,7 @@ export function Applications() {
               className={query.tab === tab ? "active" : ""}
               aria-current={query.tab === tab ? "page" : undefined}
             >
-              {TAB_LABELS[tab]} <span className="count num">{counts[tab]}</span>
+              {t(TAB_KEYS[tab])} <span className="count num">{counts[tab]}</span>
             </Link>
           ))}
         </nav>
@@ -97,8 +92,8 @@ export function Applications() {
             ref={search}
             type="search"
             value={text}
-            placeholder="Buscar empresa, rol…"
-            aria-label="Buscar"
+            placeholder={t("search.placeholder")}
+            aria-label={t("search.label")}
             onChange={(e) => {
               setText(e.target.value);
               update({ q: e.target.value });
@@ -109,17 +104,17 @@ export function Applications() {
       </div>
 
       <div className="toolbar">
-        <div className="filters" aria-label="Filtros">
+        <div className="filters">
           {STAGE_FILTERS.map((stage) => {
             const Icon = STAGE_ICONS[stage];
             const on = query.stage === stage;
             return (
               <button type="button" key={stage} className={`chip${on ? " on" : ""}`} aria-pressed={on} onClick={() => update({ stage: on ? null : stage })}>
-                <Icon /> {STAGE_LABELS[stage]}
+                <Icon /> {t(STAGE_KEYS[stage])}
               </button>
             );
           })}
-          <span className="muted" style={{ margin: "0 4px" }}>·</span>
+          <span className="filter-gap" />
           {(["es", "en"] as const).map((language) => {
             const on = query.language === language;
             return (
@@ -130,46 +125,43 @@ export function Applications() {
           })}
           {filtered && (
             <button type="button" className="btn ghost" onClick={() => update({ q: "", stage: null, language: null })}>
-              <X /> Limpiar
+              <X /> {t("filters.clear")}
             </button>
           )}
         </div>
-        <label className="sort" style={{ marginLeft: "auto" }}>
-          Ordenar
+        <label className="sort">
+          {t("sort.label")}
           <select value={query.sort} onChange={(e) => update({ sort: e.target.value as SortKey })}>
-            {(Object.keys(SORT_LABELS) as SortKey[]).map((key) => <option key={key} value={key}>{SORT_LABELS[key]}</option>)}
+            {(Object.keys(SORT_KEYS) as SortKey[]).map((key) => <option key={key} value={key}>{t(SORT_KEYS[key])}</option>)}
           </select>
         </label>
       </div>
 
-      <p className="result-count">
-        {rows.length} {rows.length === 1 ? "convocatoria" : "convocatorias"}
-      </p>
+      <p className="result-count">{t("apps.count", rows.length)}</p>
 
       <div className="list">
         {rows.length === 0 ? (
           <div className="empty">
             <SearchX />
-            <p>Nada coincide con esta búsqueda y filtros.</p>
+            <p>{t("apps.empty")}</p>
           </div>
         ) : (
           <>
             <div className="list-axis" aria-hidden>
               <span />
               <div className="track">
-                {axis.ticks.map((t) => <span key={t.date} className="tick" style={{ left: `${t.x}%` }}>{t.label}</span>)}
-                <span className="tick" style={{ left: "100%" }}>hoy</span>
+                {axis.ticks.map((tick) => <span key={tick.date} className="tick" style={{ left: `${tick.x}%` }}>{tick.label}</span>)}
+                <span className="tick" style={{ left: "100%" }}>{t("axis.today")}</span>
               </div>
               <span />
             </div>
-            {rows.map((row, i) => (
+            {rows.map((row) => (
               <Link
                 key={row.name}
-                to={`/convocatorias/${encodeURIComponent(row.name)}`}
-                state={{ back: `/convocatorias${toSearch(query)}` }}
+                to={`/applications/${encodeURIComponent(row.name)}`}
+                state={{ back: `/applications${toSearch(query)}` }}
                 viewTransition
                 className="row"
-                style={{ ["--i" as string]: Math.min(i, 20) }}
               >
                 <div className="who">
                   <div className="company">
@@ -179,11 +171,11 @@ export function Applications() {
                 </div>
                 <TimelineTrack events={row.events} open={row.state !== "closed"} axis={axis} />
                 <div className="meta">
-                  <div>aplicada <strong>{shortDate(row.applied)}</strong></div>
+                  <div>{t("apps.applied", shortDate(row.applied, lang))}</div>
                   {row.state === "closed" ? (
-                    <div>{STAGE_LABELS[row.stage].toLowerCase()} {shortDate(row.lastDate)}</div>
+                    <div>{t(STAGE_KEYS[row.stage]).toLowerCase()} {shortDate(row.lastDate, lang)}</div>
                   ) : (
-                    <div><strong className="num">{row.daysSince}d</strong> sin movimiento</div>
+                    <div><strong className="num">{t("apps.idle", row.daysSince)}</strong></div>
                   )}
                 </div>
               </Link>

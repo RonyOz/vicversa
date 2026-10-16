@@ -3,6 +3,7 @@ import type {
 } from "../../schema.js";
 import type { State } from "../../tracking.js";
 import type { PieceKind, UsageIndex } from "../../usage.js";
+import type { MessageKey } from "./i18n.js";
 
 /** GET /api/catalog, typed for the client. */
 export interface Explorer {
@@ -32,15 +33,19 @@ export interface CatalogEntry {
 export const pick = (value: Localized | undefined, language: Language): string =>
   value === undefined ? "" : typeof value === "string" ? value : value[language] ?? value[language === "es" ? "en" : "es"] ?? "";
 
-const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-export const yearMonth = (value: string | null | undefined) =>
-  value ? `${MONTHS[Number(value.slice(5, 7)) - 1]} ${value.slice(0, 4)}` : "actual";
+const MONTHS: Record<Language, string[]> = {
+  es: ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
+  en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+};
+const PRESENT: Record<Language, string> = { es: "actual", en: "present" };
 
-const span = (start: string, end: string | null) => `${yearMonth(start)} – ${yearMonth(end)}`;
+export const yearMonth = (value: string | null | undefined, language: Language = "es") =>
+  value ? `${MONTHS[language][Number(value.slice(5, 7)) - 1]} ${value.slice(0, 4)}` : PRESENT[language];
 
 /** Every piece of one kind, readable in one language, with usage counts. */
 export function catalogEntries(explorer: Explorer, kind: PieceKind, language: Language): CatalogEntry[] {
   const { catalog, usage } = explorer;
+  const span = (start: string, end: string | null) => `${yearMonth(start, language)} – ${yearMonth(end, language)}`;
   const count = (id: string) => usage.pieces[`${kind}:${id}`]?.length ?? 0;
   const bullets = (list: { id: string; text: Localized }[]) =>
     list.map((b) => ({ id: b.id, text: pick(b.text, language), count: usage.bullets[b.id]?.length ?? 0 }));
@@ -58,7 +63,7 @@ export function catalogEntries(explorer: Explorer, kind: PieceKind, language: La
       return catalog.projects.map((p) => entry(p.id, pick(p.name, language), [p.label, ...p.tech].join(" · "), "", bullets(p.bullets)));
     case "certification":
       return catalog.certifications.map((c) =>
-        entry(c.id, pick(c.name, language), `${pick(c.issuer, language)} · ${yearMonth(c.date)}`, "", bullets(c.bullets)));
+        entry(c.id, pick(c.name, language), `${pick(c.issuer, language)} · ${yearMonth(c.date, language)}`, "", bullets(c.bullets)));
     case "education":
       return catalog.education.map((e) =>
         entry(e.id, pick(e.program, language), `${pick(e.org, language)} · ${span(e.start, e.end)}`, e.honors.map((h) => pick(h, language)).join(" · ")));
@@ -80,24 +85,24 @@ export function filterEntries(entries: readonly CatalogEntry[], query: string, u
   });
 }
 
-/** URL slugs for each kind (Spanish, like the rest of the panel). */
+/** URL slugs for each kind. */
 export const KIND_SLUGS: Record<PieceKind, string> = {
-  summary: "resumenes",
-  experience: "experiencia",
-  project: "proyectos",
-  certification: "certificaciones",
-  education: "educacion",
+  summary: "summaries",
+  experience: "experience",
+  project: "projects",
+  certification: "certifications",
+  education: "education",
   skill: "skills",
 };
-export const KIND_LABELS: Record<PieceKind, string> = {
-  summary: "Resúmenes",
-  experience: "Experiencia",
-  project: "Proyectos",
-  certification: "Certificaciones",
-  education: "Educación",
-  skill: "Skills",
+export const KIND_KEYS: Record<PieceKind, MessageKey> = {
+  summary: "kind.summary",
+  experience: "kind.experience",
+  project: "kind.project",
+  certification: "kind.certification",
+  education: "kind.education",
+  skill: "kind.skill",
 };
 export const kindFromSlug = (slug: string | undefined): PieceKind =>
   ((Object.entries(KIND_SLUGS).find(([, s]) => s === slug)?.[0]) as PieceKind | undefined) ?? "summary";
 
-export const pieceHref = (kind: PieceKind, id: string) => `/catalogo/${KIND_SLUGS[kind]}/${encodeURIComponent(id)}`;
+export const pieceHref = (kind: PieceKind, id: string) => `/catalog/${KIND_SLUGS[kind]}/${encodeURIComponent(id)}`;

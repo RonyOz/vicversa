@@ -39,5 +39,5 @@ content:
 
 tracking:
   - { date: "2026-09-15", stage: applied }
-  - { date: "2026-09-25", stage: interview, note: "RH" }
-  - { date: "2026-10-02", stage: interview, note: "Técnica" }
+  - { date: "2026-09-25", stage: interview, note: "HR" }
+  - { date: "2026-10-02", stage: interview, note: "Technical" }

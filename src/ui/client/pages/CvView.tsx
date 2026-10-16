@@ -1,16 +1,18 @@
-import { ArrowLeft, ExternalLink, FileText, ListChecks } from "lucide-react";
+import { ArrowLeft, ChevronRight, ExternalLink, FileText, ListChecks } from "lucide-react";
 import { Link, useParams } from "react-router";
+import type { PieceKind } from "../../../usage.js";
 import { useCatalog, useCv, useFit } from "../api.js";
-import { catalogEntries, KIND_LABELS, pieceHref, type CatalogEntry } from "../catalog-view.js";
+import { catalogEntries, KIND_KEYS, pieceHref, type CatalogEntry } from "../catalog-view.js";
 import { CvPreview } from "../components/CvPreview.js";
 import { FitBadge } from "../components/FitBadge.js";
-import { STATE_LABELS } from "../labels.js";
-import type { PieceKind } from "../../../usage.js";
+import { useI18n } from "../i18n.js";
+import { STATE_KEYS } from "../labels.js";
 import { PageError, PageLoading } from "./states.js";
 
-const usedIn = (n: number) => `en ${n} ${n === 1 ? "CV" : "CVs"}`;
+const ITEM_KINDS = ["experience", "project", "education", "certification"] as const;
 
 export function CvView() {
+  const { t } = useI18n();
   const name = decodeURIComponent(useParams()["name"] ?? "");
   const cv = useCv(name);
   const catalog = useCatalog();
@@ -22,45 +24,52 @@ export function CvView() {
 
   const { application, pieces, tracking } = cv.data;
   const meta = application.metadata;
-  const language = meta.language;
   const htmlUrl = `/api/cv/${encodeURIComponent(name)}.html`;
+  const own = fit.data?.[name];
 
-  // Look pieces up in the CV's own language, so texts read as they print.
-  const lookup = (kind: PieceKind) => new Map(catalogEntries(catalog.data, kind, language).map((e) => [e.id, e]));
-  const summary = pieces.summary ? lookup("summary").get(pieces.summary) : undefined;
-  const byKind = new Map<PieceKind, Map<string, CatalogEntry>>();
-  const entryOf = (kind: PieceKind, id: string) => {
-    if (!byKind.has(kind)) byKind.set(kind, lookup(kind));
-    return byKind.get(kind)!.get(id);
+  // Pieces read in the CV's own language, the way they print.
+  const entries = new Map<PieceKind, CatalogEntry[]>();
+  const all = (kind: PieceKind) => {
+    if (!entries.has(kind)) entries.set(kind, catalogEntries(catalog.data, kind, meta.language));
+    return entries.get(kind)!;
   };
+  const entryOf = (kind: PieceKind, id: string) => all(kind).find((e) => e.id === id);
+  const summary = pieces.summary ? entryOf("summary", pieces.summary) : undefined;
+
+  // The other side of the diff: catalog items this version leaves out.
+  const left = ITEM_KINDS.flatMap((kind) =>
+    all(kind)
+      .filter((e) => !pieces.items.some((i) => i.kind === kind && i.id === e.id))
+      .map((e) => ({ kind, entry: e })),
+  );
 
   return (
     <>
       <Link to="/cvs" className="back" viewTransition>
-        <ArrowLeft size={15} /> Hojas de vida
+        <ArrowLeft size={15} /> {t("cv.back")}
       </Link>
       <header className="page-head detail-head">
         <div>
           <h1>
             {meta.company ?? name}
-            {tracking && <span className={`badge ${tracking.state}`}>{STATE_LABELS[tracking.state]}</span>}
+            {tracking && <span className={`badge ${tracking.state}`}>{t(STATE_KEYS[tracking.state])}</span>}
           </h1>
           <p>
-            {meta.role ?? "Plantilla o borrador"} · <span className="num">{name}</span>
+            {meta.role ?? t("cv.templateOrDraft")} <span className="file num">{name}</span>
           </p>
           <div className="links">
             {tracking && (
-              <Link className="btn" to={`/convocatorias/${encodeURIComponent(name)}`} viewTransition>
-                <ListChecks /> Ver seguimiento
+              <Link className="btn" to={`/applications/${encodeURIComponent(name)}`} viewTransition>
+                <ListChecks /> {t("cv.tracking")}
               </Link>
             )}
             {meta.url && (
               <a className="btn" href={meta.url} target="_blank" rel="noreferrer">
-                <ExternalLink /> Ver convocatoria
+                <ExternalLink /> {t("cv.posting")}
               </a>
             )}
             <a className="btn" href={htmlUrl} target="_blank" rel="noreferrer">
-              <FileText /> Abrir página
+              <FileText /> {t("cv.open")}
             </a>
           </div>
         </div>
@@ -68,86 +77,106 @@ export function CvView() {
 
       <div className="grid-2 cv-layout">
         <section className="card">
-          <CvPreview src={htmlUrl} title={`CV ${name}`} />
+          <CvPreview src={htmlUrl} title={name} />
         </section>
 
         <div className="stack">
           <section className="card">
-            <h2>Una página</h2>
-            <p className="lede">Medido en el mismo navegador que imprime el PDF.</p>
-            <FitBadge fit={fit.data?.[name]} />
-            {fit.data?.[name] && !fit.data[name]!.error && (
-              <div className="meter" data-tip={`${fit.data[name]!.used.toFixed(0)} de ${fit.data[name]!.available.toFixed(0)} pt usados`}>
-                <i style={{ width: `${Math.min(100, (fit.data[name]!.used / fit.data[name]!.available) * 100)}%` }} className={fit.data[name]!.ok ? "" : "over"} />
+            <h2>{t("cv.fit")}</h2>
+            <p className="lede">{t("cv.fitLede")}</p>
+            <FitBadge fit={own} />
+            {own && !own.error && (
+              <div className="meter" data-tip={t("fit.meterTip", own.used.toFixed(0), own.available.toFixed(0))}>
+                <i style={{ width: `${Math.min(100, (own.used / own.available) * 100)}%` }} className={own.ok ? "" : "over"} />
               </div>
             )}
           </section>
 
           <section className="card">
-            <h2>Piezas del catálogo</h2>
-            <p className="lede">Lo que esta hoja de vida toma del catálogo, en orden. Clic para ver dónde más se usa.</p>
+            <h2>{t("cv.pieces")}</h2>
+            <p className="lede">{t("cv.piecesLede")}</p>
 
-            {summary && (
-              <div className="piece-group">
-                <h3>{KIND_LABELS.summary}</h3>
-                <Link to={pieceHref("summary", summary.id)} className="piece" viewTransition>
-                  <div className="piece-head">
-                    <span className="num">{summary.id}</span>
-                    <span className="uses">{usedIn(summary.count)}</span>
-                  </div>
-                  <p className="piece-text">{summary.text}</p>
-                </Link>
-              </div>
-            )}
+            <ul className="diff">
+              {summary && (
+                <li>
+                  <Link to={pieceHref("summary", summary.id)} className="piece add" viewTransition>
+                    <span className="piece-head">
+                      <span>
+                        <span className="kind">{t(KIND_KEYS.summary)}</span> <span className="num">{summary.id}</span>
+                      </span>
+                      <span className="uses">{t("cv.usedIn", summary.count)}</span>
+                    </span>
+                    <span className="piece-text">{summary.text}</span>
+                  </Link>
+                </li>
+              )}
+              {pieces.items.map((item) => {
+                const entry = entryOf(item.kind, item.id);
+                return (
+                  <li key={`${item.kind}:${item.id}`}>
+                    <Link to={pieceHref(item.kind, item.id)} className="piece add" viewTransition>
+                      <span className="piece-head">
+                        <span>
+                          <span className="kind">{t(KIND_KEYS[item.kind])}</span> <strong>{entry?.title ?? item.id}</strong>
+                        </span>
+                        <span className="uses">{t("cv.usedIn", entry?.count ?? 0)}</span>
+                      </span>
+                      {entry?.subtitle && <span className="piece-sub">{entry.subtitle}</span>}
+                      {item.bullets.length > 0 && (
+                        <span className="bullets">
+                          {item.bullets.map((b) => {
+                            const bullet = entry?.bullets.find((x) => x.id === b);
+                            return (
+                              <span key={b} className="bullet" data-tip={`${b}\n${t("cv.usedIn", bullet?.count ?? 0)}`}>
+                                {bullet?.text ?? b}
+                              </span>
+                            );
+                          })}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+              {pieces.skills.length > 0 && (
+                <li className="piece add">
+                  <span className="piece-head">
+                    <span className="kind">{t(KIND_KEYS.skill)}</span>
+                  </span>
+                  <span className="skill-chips">
+                    {pieces.skills.map((id) => {
+                      const skill = entryOf("skill", id);
+                      return (
+                        <Link key={id} to={pieceHref("skill", id)} className="chip" viewTransition data-tip={`${skill?.title ?? id}${skill?.subtitle ? ` (${skill.subtitle})` : ""}\n${t("cv.usedIn", skill?.count ?? 0)}`}>
+                          {skill?.title ?? id}
+                        </Link>
+                      );
+                    })}
+                  </span>
+                </li>
+              )}
+            </ul>
 
-            {(["experience", "project", "education", "certification"] as const).map((kind) => {
-              const items = pieces.items.filter((i) => i.kind === kind);
-              if (items.length === 0) return null;
-              return (
-                <div className="piece-group" key={kind}>
-                  <h3>{KIND_LABELS[kind]}</h3>
-                  {items.map((item) => {
-                    const entry = entryOf(kind, item.id);
-                    return (
-                      <Link key={item.id} to={pieceHref(kind, item.id)} className="piece" viewTransition>
-                        <div className="piece-head">
-                          <strong>{entry?.title ?? item.id}</strong>
-                          <span className="uses">{usedIn(entry?.count ?? 0)}</span>
-                        </div>
-                        <div className="piece-sub">{entry?.subtitle}</div>
-                        {item.bullets.length > 0 && (
-                          <ul className="bullets">
-                            {item.bullets.map((b) => {
-                              const bullet = entry?.bullets.find((x) => x.id === b);
-                              return (
-                                <li key={b} data-tip={`${b}\n${usedIn(bullet?.count ?? 0)}`}>
-                                  {bullet?.text ?? b}
-                                </li>
-                              );
-                            })}
-                          </ul>
-                        )}
+            {left.length > 0 && (
+              <details className="fold left-out">
+                <summary>
+                  <ChevronRight /> {t("cv.unused", left.length)}
+                </summary>
+                <ul className="diff">
+                  {left.map(({ kind, entry }) => (
+                    <li key={`${kind}:${entry.id}`}>
+                      <Link to={pieceHref(kind, entry.id)} className="piece remove" viewTransition>
+                        <span className="piece-head">
+                          <span>
+                            <span className="kind">{t(KIND_KEYS[kind])}</span> {entry.title}
+                          </span>
+                          <span className="uses">{t("cv.usedIn", entry.count)}</span>
+                        </span>
                       </Link>
-                    );
-                  })}
-                </div>
-              );
-            })}
-
-            {pieces.skills.length > 0 && (
-              <div className="piece-group">
-                <h3>{KIND_LABELS.skill}</h3>
-                <div className="skill-chips">
-                  {pieces.skills.map((id) => {
-                    const skill = entryOf("skill", id);
-                    return (
-                      <Link key={id} to={pieceHref("skill", id)} className="chip" viewTransition data-tip={`${skill?.title ?? id}${skill?.subtitle ? ` · ${skill.subtitle}` : ""}\n${usedIn(skill?.count ?? 0)}`}>
-                        {skill?.title ?? id}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
+                    </li>
+                  ))}
+                </ul>
+              </details>
             )}
           </section>
         </div>

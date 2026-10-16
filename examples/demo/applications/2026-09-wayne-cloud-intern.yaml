@@ -38,5 +38,5 @@ content:
 
 tracking:
   - { date: "2026-09-05", stage: applied }
-  - { date: "2026-09-12", stage: assessment, note: "Prueba técnica" }
-  - { date: "2026-09-26", stage: rejected, note: "Tras prueba" }
+  - { date: "2026-09-12", stage: assessment, note: "Take-home" }
+  - { date: "2026-09-26", stage: rejected, note: "After the test" }

@@ -1,10 +1,28 @@
-/** Calendar math for the date picker: plain "YYYY-MM-DD" strings, no time zones. */
+import type { Language } from "../../schema.js";
+import type { MessageKey } from "./i18n.js";
 
-export const MONTH_NAMES = [
-  "enero", "febrero", "marzo", "abril", "mayo", "junio",
-  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
-];
-const MONTHS_SHORT = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+/** Calendar math and date wording for the panel: plain "YYYY-MM-DD" strings, no time zones. */
+
+const MONTHS: Record<Language, { long: string[]; short: string[] }> = {
+  en: {
+    long: ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+    short: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  },
+  es: {
+    long: ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"],
+    short: ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
+  },
+};
+
+export const monthNames = (lang: Language, width: "long" | "short" = "long") => MONTHS[lang][width];
+
+/** Monday first, three letters. */
+export const weekdayNames = (lang: Language) =>
+  lang === "en" ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] : ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+
+/** One letter, for the date picker header. */
+export const weekdayInitials = (lang: Language) =>
+  lang === "en" ? ["M", "T", "W", "T", "F", "S", "S"] : ["L", "M", "X", "J", "V", "S", "D"];
 
 export function addDays(date: string, days: number): string {
   const [y, m, d] = date.split("-").map(Number) as [number, number, number];
@@ -33,24 +51,27 @@ export function monthMatrix(month: string): (string | null)[][] {
 }
 
 /** Shortcuts under the picker; the last event's day is the usual anchor for late logging. */
-export function quickDates(today: string, lastEvent: string | null): { label: string; date: string }[] {
-  const options = [
-    { label: "Hoy", date: today },
-    { label: "Ayer", date: addDays(today, -1) },
-    { label: "Hace 1 semana", date: addDays(today, -7) },
+export function quickDates(today: string, lastEvent: string | null): { key: MessageKey; date: string }[] {
+  const options: { key: MessageKey; date: string }[] = [
+    { key: "date.today", date: today },
+    { key: "date.yesterday", date: addDays(today, -1) },
+    { key: "date.weekAgo", date: addDays(today, -7) },
   ];
-  if (lastEvent && !options.some((o) => o.date === lastEvent)) options.push({ label: "Último evento", date: lastEvent });
+  if (lastEvent && !options.some((o) => o.date === lastEvent)) options.push({ key: "date.lastEvent", date: lastEvent });
   return options;
 }
 
-/** "15 oct" — and "15 oct 2025" when the year is not the current one. */
-export function shortDate(date: string, currentYear?: string): string {
+/** "Oct 15" / "15 oct" — with the year when it is not the current one. */
+export function shortDate(date: string, lang: Language = "es", currentYear?: string): string {
   const [y, m, d] = date.split("-");
-  const base = `${Number(d)} ${MONTHS_SHORT[Number(m) - 1]}`;
-  return currentYear && y !== currentYear ? `${base} ${y}` : base;
+  const month = MONTHS[lang].short[Number(m) - 1];
+  const base = lang === "en" ? `${month} ${Number(d)}` : `${Number(d)} ${month}`;
+  return currentYear && y !== currentYear ? `${base}${lang === "en" ? "," : ""} ${y}` : base;
 }
 
-export function longDate(date: string): string {
+/** "October 15, 2026" / "15 de octubre de 2026". */
+export function longDate(date: string, lang: Language = "es"): string {
   const [y, m, d] = date.split("-");
-  return `${Number(d)} de ${MONTH_NAMES[Number(m) - 1]} de ${y}`;
+  const month = MONTHS[lang].long[Number(m) - 1];
+  return lang === "en" ? `${month} ${Number(d)}, ${y}` : `${Number(d)} de ${month} de ${y}`;
 }

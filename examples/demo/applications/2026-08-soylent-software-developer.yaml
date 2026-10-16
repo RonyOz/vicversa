@@ -38,6 +38,6 @@ content:
 
 tracking:
   - { date: "2026-08-25", stage: applied }
-  - { date: "2026-09-03", stage: interview, note: "RH" }
+  - { date: "2026-09-03", stage: interview, note: "HR" }
   - { date: "2026-09-15", stage: offer, note: "Verbal" }
-  - { date: "2026-09-18", stage: withdrawn, note: "Otra oferta" }
+  - { date: "2026-09-18", stage: withdrawn, note: "Other offer" }

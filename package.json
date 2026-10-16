@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit",
     "test": "VICVERSA_HOME=examples/demo tsx --test --test-concurrency=1 tests/*.test.ts",
     "mcp": "tsx --env-file-if-exists=.env src/mcp.ts",
-    "ui": "tsx --env-file-if-exists=.env src/ui/main.ts"
+    "ui": "tsx --env-file-if-exists=.env src/ui/main.ts",
+    "brand": "tsx scripts/brand-assets.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",

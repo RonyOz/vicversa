@@ -2,10 +2,12 @@ import { Link } from "react-router";
 import { useDashboard } from "../api.js";
 import { FunnelCard, Kpis, PaceCard } from "../components/charts.js";
 import { longDate, shortDate } from "../dates.js";
-import { StageIcon, STAGE_LABELS } from "../labels.js";
+import { useI18n } from "../i18n.js";
+import { StageIcon, STAGE_KEYS } from "../labels.js";
 import { PageError, PageLoading } from "./states.js";
 
 export function Summary() {
+  const { t, lang } = useI18n();
   const { data, error } = useDashboard();
   if (error) return <PageError error={error} />;
   if (!data) return <PageLoading />;
@@ -20,8 +22,8 @@ export function Summary() {
     <>
       <header className="page-head">
         <div>
-          <h1>Resumen</h1>
-          <p>{longDate(data.today)} · espera de {data.staleDays} días antes de contar como "sin respuesta"</p>
+          <h1>{t("summary.title")}</h1>
+          <p>{t("summary.lede", longDate(data.today, lang), data.staleDays)}</p>
         </div>
       </header>
       <div className="stack">
@@ -30,22 +32,23 @@ export function Summary() {
         <div className="grid-2">
           <PaceCard data={data} />
           <section className="card">
-            <h2>Actividad reciente</h2>
-            <p className="lede">Últimos movimientos registrados.</p>
+            <h2>{t("activity.title")}</h2>
+            <p className="lede">{t("activity.lede")}</p>
             <ul className="feed">
               {activity.map(({ row, event }, i) => (
                 <li key={`${row.name}-${i}`}>
                   <StageIcon stage={event.stage} />
                   <div>
-                    <Link to={`/convocatorias/${encodeURIComponent(row.name)}`} viewTransition>
+                    <Link to={`/applications/${encodeURIComponent(row.name)}`} viewTransition>
                       {row.company ?? row.name}
                     </Link>
                     <div className="sub">
-                      {STAGE_LABELS[event.stage]}
-                      {event.note ? ` · ${event.note}` : ""} · {row.role}
+                      {t(STAGE_KEYS[event.stage])}
+                      {event.note ? `: ${event.note}` : ""}
+                      <span className="muted">, {row.role}</span>
                     </div>
                   </div>
-                  <span className="muted num" style={{ fontSize: 12 }}>{shortDate(event.date)}</span>
+                  <span className="muted num when">{shortDate(event.date, lang)}</span>
                 </li>
               ))}
             </ul>

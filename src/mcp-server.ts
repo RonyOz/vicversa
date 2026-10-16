@@ -11,7 +11,7 @@ import { formatFunnel, formatPace, formatTable, formatTimeline } from "./trackin
 import { localToday } from "./tracking.js";
 
 // Output schemas: what a client can rely on. Deep catalog/application data stays
-// loosely typed on purpose; its contract is SPEC.md §5, not this file.
+// loosely typed on purpose; its contract is the Zod schema in src/schema.ts.
 
 const Stage = z.enum(STAGES);
 const State = z.enum(["active", "stale", "closed"]);

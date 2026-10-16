@@ -1,14 +1,12 @@
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { longDate, MONTH_NAMES, monthMatrix, quickDates, shiftMonth } from "../dates.js";
-
-const WEEKDAYS = ["L", "M", "X", "J", "V", "S", "D"];
+import { longDate, monthMatrix, monthNames, quickDates, shiftMonth, weekdayInitials } from "../dates.js";
+import { useI18n } from "../i18n.js";
 
 /**
  * A date picker that opens where you are working, not on today: on the month
- * of the selected date (which starts at the application's last event when
- * logging late). Marks the days that already have events, blocks the future,
- * and offers one-click shortcuts.
+ * of the selected date. Marks the days that already have events, blocks the
+ * future, and offers one-click shortcuts including the last event's day.
  */
 export function DatePicker({
   value,
@@ -23,6 +21,7 @@ export function DatePicker({
   eventDates: readonly string[];
   lastEvent: string | null;
 }) {
+  const { t, lang } = useI18n();
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(value.slice(0, 7));
   const root = useRef<HTMLDivElement>(null);
@@ -54,24 +53,24 @@ export function DatePicker({
     <div className="datepick" ref={root}>
       <button type="button" className="btn trigger" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
         <CalendarDays />
-        {value === today ? `Hoy · ${longDate(value)}` : longDate(value)}
+        {value === today ? t("date.todayPrefix", longDate(value, lang)) : longDate(value, lang)}
       </button>
       {open && (
-        <div className="pop" role="dialog" aria-label="Elegir fecha">
+        <div className="pop" role="dialog" aria-label={t("date.pick")}>
           <div className="head">
-            <button type="button" onClick={() => setMonth(shiftMonth(month, -1))} aria-label="Mes anterior">
+            <button type="button" onClick={() => setMonth(shiftMonth(month, -1))} aria-label={t("date.prev")}>
               <ChevronLeft size={18} />
             </button>
             <span>
-              {MONTH_NAMES[monthNumber - 1]} {year}
+              {monthNames(lang)[monthNumber - 1]} {year}
             </span>
-            <button type="button" onClick={() => setMonth(shiftMonth(month, 1))} disabled={atCurrentMonth} aria-label="Mes siguiente">
+            <button type="button" onClick={() => setMonth(shiftMonth(month, 1))} disabled={atCurrentMonth} aria-label={t("date.next")}>
               <ChevronRight size={18} />
             </button>
           </div>
           <table>
             <thead>
-              <tr>{WEEKDAYS.map((d) => <th key={d}>{d}</th>)}</tr>
+              <tr>{weekdayInitials(lang).map((d, i) => <th key={i}>{d}</th>)}</tr>
             </thead>
             <tbody>
               {monthMatrix(month).map((week, w) => (
@@ -88,7 +87,7 @@ export function DatePicker({
                             date === today && "today",
                             eventDates.includes(date) && "has-event",
                           ].filter(Boolean).join(" ")}
-                          aria-label={longDate(date)}
+                          aria-label={longDate(date, lang)}
                           aria-pressed={date === value}
                         >
                           {Number(date.slice(8))}
@@ -102,8 +101,8 @@ export function DatePicker({
           </table>
           <div className="quick">
             {quickDates(today, lastEvent).map((q) => (
-              <button type="button" key={q.label} className={`chip${q.date === value ? " on" : ""}`} onClick={() => pick(q.date)}>
-                {q.label}
+              <button type="button" key={q.key} className={`chip${q.date === value ? " on" : ""}`} onClick={() => pick(q.date)}>
+                {t(q.key)}
               </button>
             ))}
           </div>

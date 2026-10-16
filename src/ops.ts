@@ -1,7 +1,8 @@
 import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import { loadApplication, loadCatalog } from "./catalog.js";
-import { applicationsDir, catalogDir, dataRoot, outDir } from "./paths.js";
+import { applicationsDir, catalogDir, dataRoot, DEMO_ROOT, outDir } from "./paths.js";
+import { homedir } from "node:os";
 import { buildHtml } from "./html.js";
 import { pick } from "./i18n.js";
 import { renderPdf, withSharedBrowser } from "./render.js";
@@ -462,4 +463,16 @@ export async function getFit(): Promise<Record<string, FitEntry>> {
     });
   }
   return fitCache.fit;
+}
+
+/** Where the data comes from and which template renders it: shown in the panel's sidebar. */
+export async function getInfo(): Promise<{ dataRoot: string; demo: boolean; template: { id: string; name: string; source: "bundled" | "user" } }> {
+  const root = dataRoot();
+  const { template } = await loadCatalog();
+  const home = homedir();
+  return {
+    dataRoot: root.startsWith(home) ? `~${root.slice(home.length)}` : root,
+    demo: root === DEMO_ROOT,
+    template: { id: template.definition.id, name: template.definition.name, source: template.source },
+  };
 }

@@ -39,4 +39,4 @@ content:
 
 tracking:
   - { date: "2026-09-10", stage: applied }
-  - { date: "2026-09-20", stage: rejected, note: "Correo" }
+  - { date: "2026-09-20", stage: rejected, note: "Email" }

@@ -2,81 +2,84 @@ import { Link } from "react-router";
 import type { Dashboard } from "../../../ops.js";
 import type { TrackingEvent } from "../../../schema.js";
 import { calendarGrid, calendarLevel, funnelSegments, type SegmentKey, type TimeAxis } from "../../layout.js";
-import { shortDate } from "../dates.js";
-import { STAGE_LABELS } from "../labels.js";
+import { monthNames, shortDate, weekdayNames } from "../dates.js";
+import { useI18n, type MessageKey } from "../i18n.js";
+import { STAGE_KEYS } from "../labels.js";
 
 const pct = (part: number, whole: number) => (whole === 0 ? 0 : Math.round((part / whole) * 100));
 
-export const SEGMENT_LABELS: Record<SegmentKey, string> = {
-  waiting: "En espera",
-  silent: "Sin respuesta",
-  withdrawn: "Retiradas sin respuesta",
-  rejected: "Rechazo directo",
-  advanced: "Avanzaron",
+export const SEGMENT_KEYS: Record<SegmentKey, MessageKey> = {
+  waiting: "funnel.waiting",
+  silent: "funnel.silent",
+  withdrawn: "funnel.withdrawn",
+  rejected: "funnel.rejected",
+  advanced: "funnel.advanced",
 };
 
 /** Where each segment leads in the tracker. */
 const SEGMENT_LINKS: Record<SegmentKey, string> = {
-  waiting: "/convocatorias",
-  silent: "/convocatorias?tab=sin-respuesta",
-  withdrawn: "/convocatorias?tab=cerradas&etapa=withdrawn",
-  rejected: "/convocatorias?tab=cerradas&etapa=rejected",
-  advanced: "/convocatorias?tab=todas",
+  waiting: "/applications",
+  silent: "/applications?tab=stale",
+  withdrawn: "/applications?tab=closed&stage=withdrawn",
+  rejected: "/applications?tab=closed&stage=rejected",
+  advanced: "/applications?tab=all",
 };
 
 export function Kpis({ data }: { data: Dashboard }) {
+  const { t } = useI18n();
   const f = data.funnel;
   return (
     <div className="kpis">
       <div className="kpi">
-        <div className="label">Enviadas</div>
+        <div className="label">{t("kpi.sent")}</div>
         <div className="value num">{f.total}</div>
-        <div className="hint">{data.pace.average.toFixed(1)} por semana (últimas {data.pace.weeks.length})</div>
+        <div className="hint">{t("kpi.sentHint", data.pace.average.toFixed(1), data.pace.weeks.length)}</div>
       </div>
       <div className="kpi">
-        <div className="label"><i className="swatch s-waiting" />En espera</div>
+        <div className="label"><i className="swatch s-waiting" />{t("kpi.waiting")}</div>
         <div className="value num">{f.waiting}</div>
-        <div className="hint">menos de {data.staleDays} días: aún no es un resultado</div>
+        <div className="hint">{t("kpi.waitingHint", data.staleDays)}</div>
       </div>
       <div className="kpi">
-        <div className="label"><i className="swatch s-silent" />Sin respuesta</div>
+        <div className="label"><i className="swatch s-silent" />{t("kpi.silent")}</div>
         <div className="value num">{f.silent}</div>
-        <div className="hint">silencio, no rechazo</div>
+        <div className="hint">{t("kpi.silentHint")}</div>
       </div>
       <div className="kpi">
-        <div className="label">Respondieron</div>
+        <div className="label">{t("kpi.responded")}</div>
         <div className="value num">
-          {f.responded} <small>de {f.resolved}</small>
+          {f.responded} <small>{t("kpi.of", f.resolved)}</small>
         </div>
-        <div className="hint">{pct(f.responded, f.resolved)}% de las que ya cumplieron la espera</div>
+        <div className="hint">{t("kpi.respondedHint", pct(f.responded, f.resolved))}</div>
       </div>
     </div>
   );
 }
 
 export function FunnelCard({ data }: { data: Dashboard }) {
+  const { t } = useI18n();
   const f = data.funnel;
   const segments = funnelSegments(f);
   const reached = (["assessment", "interview", "offer", "hired"] as const)
     .map((reach) => {
       const o = f.advanced[reach];
       const n = o.ongoing + o.rejected + o.withdrawn + o.hired;
-      return n > 0 ? `${n} hasta ${STAGE_LABELS[reach].toLowerCase()}` : null;
+      return n > 0 ? t("funnel.reachedPart", n, t(STAGE_KEYS[reach])) : null;
     })
     .filter(Boolean);
   return (
     <section className="card">
-      <h2>¿Qué pasó con cada aplicación?</h2>
-      <p className="lede">Cada aplicación cae en exactamente un grupo. Espera y silencio no son rechazo. Clic para verlas.</p>
-      <div className="funnel-bar" role="img" aria-label={segments.map((s) => `${SEGMENT_LABELS[s.key]}: ${s.count}`).join(", ")}>
-        {segments.map((s) => (
+      <h2>{t("funnel.title")}</h2>
+      <p className="lede">{t("funnel.lede")}</p>
+      <div className="funnel-bar" role="img" aria-label={segments.map((s) => `${t(SEGMENT_KEYS[s.key])}: ${s.count}`).join(", ")}>
+        {segments.map((s, i) => (
           <Link
             key={s.key}
             to={SEGMENT_LINKS[s.key]}
             viewTransition
             className={`s-${s.key}`}
-            style={{ width: `${s.share * 100}%` }}
-            data-tip={`${SEGMENT_LABELS[s.key]}\n${s.count} de ${f.total} (${pct(s.count, f.total)}%) · clic para verlas`}
+            style={{ width: `${s.share * 100}%`, ["--i" as string]: i }}
+            data-tip={t("funnel.tip", t(SEGMENT_KEYS[s.key]), s.count, f.total, pct(s.count, f.total))}
           />
         ))}
       </div>
@@ -84,27 +87,23 @@ export function FunnelCard({ data }: { data: Dashboard }) {
         {segments.map((s) => (
           <Link key={s.key} to={SEGMENT_LINKS[s.key]} viewTransition>
             <i className={`swatch s-${s.key}`} />
-            {SEGMENT_LABELS[s.key]} <b className="num">{s.count}</b>
+            {t(SEGMENT_KEYS[s.key])} <b className="num">{s.count}</b>
           </Link>
         ))}
       </div>
-      {reached.length > 0 && <p className="note">Avanzaron: {reached.join(" · ")}.</p>}
+      {reached.length > 0 && <p className="note">{t("funnel.reached", reached.join(", "))}</p>}
     </section>
   );
 }
 
-const WEEKDAYS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
-
 export function PaceCard({ data }: { data: Dashboard }) {
-  const grid = calendarGrid(data.rows.map((r) => r.events), data.today, data.pace.weeks.length);
-  const plural = (n: number) => `${n} aplicaci${n === 1 ? "ón" : "ones"}`;
+  const { t, lang } = useI18n();
+  const grid = calendarGrid(data.rows.map((r) => r.events), data.today, data.pace.weeks.length, monthNames(lang, "short"));
+  const weekdays = weekdayNames(lang);
   return (
     <section className="card">
-      <h2>Ritmo</h2>
-      <p className="lede">
-        Cada celda es un día; color más intenso, más aplicaciones. Promedio{" "}
-        <span className="num">{data.pace.average.toFixed(1)}</span> por semana.
-      </p>
+      <h2>{t("pace.title")}</h2>
+      <p className="lede">{t("pace.lede", data.pace.average.toFixed(1))}</p>
       <div className="cal-wrap">
         <table className="cal">
           <colgroup><col className="days" /></colgroup>
@@ -119,19 +118,19 @@ export function PaceCard({ data }: { data: Dashboard }) {
             </tr>
           </thead>
           <tbody>
-            {WEEKDAYS.map((weekday, d) => (
+            {weekdays.map((weekday, d) => (
               <tr key={weekday}>
                 <th scope="row">{weekday}</th>
                 {grid.weeks.map((w) => {
                   const day = w.days[d]!;
-                  const label = `${weekday} ${shortDate(day.date)}: ${day.future ? "aún no llega" : plural(day.count)}`;
-                  const tip = `${weekday} ${shortDate(day.date)}${day.today ? " · hoy" : ""}\n${day.future ? "aún no llega" : plural(day.count)}`;
+                  const when = `${weekday} ${shortDate(day.date, lang)}`;
+                  const what = day.future ? t("pace.future") : t("pace.count", day.count);
                   return (
                     <td key={day.date}>
                       <span
                         className={`cell l${calendarLevel(day.count)}${day.today ? " today" : ""}${day.future ? " future" : ""}`}
-                        data-tip={tip}
-                        aria-label={label}
+                        data-tip={`${when}${day.today ? `, ${t("pace.today")}` : ""}\n${what}`}
+                        aria-label={`${when}: ${what}`}
                       >
                         {day.count > 0 ? day.count : ""}
                       </span>
@@ -143,32 +142,36 @@ export function PaceCard({ data }: { data: Dashboard }) {
           </tbody>
           <tfoot>
             <tr>
-              <th scope="row">total</th>
+              <th scope="row">{t("pace.total")}</th>
               {grid.weeks.map((w) => <td key={w.start} className="num">{w.total}</td>)}
             </tr>
           </tfoot>
         </table>
       </div>
       <div className="cal-legend">
-        menos {[0, 1, 2, 3, 4].map((l) => <span key={l} className={`cell l${l}`} />)} más
+        {t("pace.less")} {[0, 1, 2, 3, 4].map((l) => <span key={l} className={`cell l${l}`} />)} {t("pace.more")}
       </div>
     </section>
   );
 }
 
-const eventTip = (e: TrackingEvent) => `${STAGE_LABELS[e.stage]}${e.note ? ` · ${e.note}` : ""}\n${shortDate(e.date)}`;
-
-/** One application on the shared time axis; dotted line is the wait until today. */
+/** One application on the shared time axis; the dotted line is the wait until today. */
 export function TimelineTrack({ events, open, axis }: { events: readonly TrackingEvent[]; open: boolean; axis: TimeAxis }) {
+  const { t, lang } = useI18n();
   const start = axis.x(events[0]!.date);
   const end = axis.x(events.at(-1)!.date);
   return (
     <div className="track" aria-hidden>
-      {axis.ticks.map((t) => <i className="gridline" key={t.date} style={{ left: `${t.x}%` }} />)}
+      {axis.ticks.map((tick) => <i className="gridline" key={tick.date} style={{ left: `${tick.x}%` }} />)}
       {end > start && <i className="span" style={{ left: `${start}%`, width: `${end - start}%` }} />}
       {open && <i className="wait" style={{ left: `${end}%`, width: `${100 - end}%` }} />}
       {events.map((e, i) => (
-        <i key={`${e.date}-${i}`} className={`mark ${e.stage}`} style={{ left: `${axis.x(e.date)}%` }} data-tip={eventTip(e)} />
+        <i
+          key={`${e.date}-${i}`}
+          className={`mark ${e.stage}`}
+          style={{ left: `${axis.x(e.date)}%` }}
+          data-tip={`${t(STAGE_KEYS[e.stage])}${e.note ? `: ${e.note}` : ""}\n${shortDate(e.date, lang)}`}
+        />
       ))}
     </div>
   );

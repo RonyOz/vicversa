@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { CvListing, Dashboard, FitEntry, getApplication, getCvDetail } from "../../ops.js";
+import type { CvListing, Dashboard, FitEntry, getApplication, getCvDetail, getInfo } from "../../ops.js";
 import type { Explorer } from "./catalog-view.js";
 import type { Stage, TrackingEvent } from "../../schema.js";
 import type { TrackSummary } from "../../tracking.js";
@@ -75,3 +75,6 @@ export const useFit = () =>
   });
 
 export const useCatalog = () => useQuery({ queryKey: ["catalog"], queryFn: () => request<Explorer>("/api/catalog") });
+
+export const useInfo = () =>
+  useQuery({ queryKey: ["info"], queryFn: () => request<Awaited<ReturnType<typeof getInfo>>>("/api/info"), staleTime: Infinity });
