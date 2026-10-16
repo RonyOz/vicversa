@@ -76,7 +76,7 @@ export function FunnelCard({ data }: { data: Dashboard }) {
             viewTransition
             className={`s-${s.key}`}
             style={{ width: `${s.share * 100}%` }}
-            title={`${SEGMENT_LABELS[s.key]}: ${s.count} de ${f.total} (${pct(s.count, f.total)}%)`}
+            data-tip={`${SEGMENT_LABELS[s.key]}\n${s.count} de ${f.total} (${pct(s.count, f.total)}%) · clic para verlas`}
           />
         ))}
       </div>
@@ -125,11 +125,12 @@ export function PaceCard({ data }: { data: Dashboard }) {
                 {grid.weeks.map((w) => {
                   const day = w.days[d]!;
                   const label = `${weekday} ${shortDate(day.date)}: ${day.future ? "aún no llega" : plural(day.count)}`;
+                  const tip = `${weekday} ${shortDate(day.date)}${day.today ? " · hoy" : ""}\n${day.future ? "aún no llega" : plural(day.count)}`;
                   return (
                     <td key={day.date}>
                       <span
                         className={`cell l${calendarLevel(day.count)}${day.today ? " today" : ""}${day.future ? " future" : ""}`}
-                        title={label}
+                        data-tip={tip}
                         aria-label={label}
                       >
                         {day.count > 0 ? day.count : ""}
@@ -155,7 +156,7 @@ export function PaceCard({ data }: { data: Dashboard }) {
   );
 }
 
-const eventTitle = (e: TrackingEvent) => `${shortDate(e.date)} · ${STAGE_LABELS[e.stage]}${e.note ? ` · ${e.note}` : ""}`;
+const eventTip = (e: TrackingEvent) => `${STAGE_LABELS[e.stage]}${e.note ? ` · ${e.note}` : ""}\n${shortDate(e.date)}`;
 
 /** One application on the shared time axis; dotted line is the wait until today. */
 export function TimelineTrack({ events, open, axis }: { events: readonly TrackingEvent[]; open: boolean; axis: TimeAxis }) {
@@ -167,7 +168,7 @@ export function TimelineTrack({ events, open, axis }: { events: readonly Trackin
       {end > start && <i className="span" style={{ left: `${start}%`, width: `${end - start}%` }} />}
       {open && <i className="wait" style={{ left: `${end}%`, width: `${100 - end}%` }} />}
       {events.map((e, i) => (
-        <i key={`${e.date}-${i}`} className={`mark ${e.stage}`} style={{ left: `${axis.x(e.date)}%` }} title={eventTitle(e)} />
+        <i key={`${e.date}-${i}`} className={`mark ${e.stage}`} style={{ left: `${axis.x(e.date)}%` }} data-tip={eventTip(e)} />
       ))}
     </div>
   );

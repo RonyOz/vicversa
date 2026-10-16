@@ -77,21 +77,7 @@ async function api(request: IncomingMessage, response: ServerResponse, today: st
 
 export async function createUiServer(options: { today?: () => string; vite?: boolean } = {}): Promise<Server> {
   const today = options.today ?? localToday;
-  const vite =
-    options.vite === false
-      ? null
-      : await (async () => {
-          const { createServer: createVite } = await import("vite");
-          const { default: react } = await import("@vitejs/plugin-react");
-          return createVite({
-            root: CLIENT_ROOT,
-            configFile: false,
-            plugins: [react()],
-            appType: "spa",
-            server: { middlewareMode: true },
-            logLevel: "warn",
-          });
-        })();
+  let vite: import("vite").ViteDevServer | null = null;
 
   const server = createServer((request, response) => {
     if ((request.url ?? "").startsWith("/api/")) {
@@ -105,6 +91,20 @@ export async function createUiServer(options: { today?: () => string; vite?: boo
     response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
     response.end("Not found (UI disabled)");
   });
+
+  if (options.vite !== false) {
+    const { createServer: createVite } = await import("vite");
+    const { default: react } = await import("@vitejs/plugin-react");
+    vite = await createVite({
+      root: CLIENT_ROOT,
+      configFile: false,
+      plugins: [react()],
+      appType: "spa",
+      // Hot reload rides on this same HTTP server instead of a second port.
+      server: { middlewareMode: true, hmr: { server } },
+      logLevel: "warn",
+    });
+  }
   server.on("close", () => void vite?.close());
   return server;
 }

@@ -5,6 +5,7 @@ import { BrowserRouter } from "react-router";
 import { App } from "./App.js";
 import "./styles.css";
 import { ToastProvider } from "./toast.js";
+import { TooltipLayer } from "./Tooltip.js";
 
 // Data is local and only changes through this app (or a YAML edit): refetch
 // when the window regains focus, otherwise trust the cache.
@@ -18,6 +19,7 @@ createRoot(document.getElementById("root")!).render(
       <BrowserRouter>
         <ToastProvider>
           <App />
+          <TooltipLayer />
         </ToastProvider>
       </BrowserRouter>
     </QueryClientProvider>

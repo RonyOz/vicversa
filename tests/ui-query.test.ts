@@ -87,3 +87,17 @@ test("quickDates offers today, yesterday, a week ago and the last event, dedupli
   ]);
   assert.deepEqual(quickDates("2026-10-15", "2026-09-26").at(-1), { label: "Último evento", date: "2026-09-26" });
 });
+
+test("placeTooltip centers above, flips below near the top, clamps to the viewport", async () => {
+  const { placeTooltip } = await import("../src/ui/client/tooltip-place.js");
+  const viewport = { width: 1000, height: 800 };
+  const size = { width: 100, height: 30 };
+  // Centered above a 20px-wide target at x=500.
+  assert.deepEqual(placeTooltip({ left: 490, right: 510, top: 300, bottom: 320 }, size, viewport), { left: 450, top: 262, place: "top" });
+  // No room above: goes below.
+  assert.deepEqual(placeTooltip({ left: 490, right: 510, top: 20, bottom: 40 }, size, viewport), { left: 450, top: 48, place: "bottom" });
+  // Near the right edge: clamped 8px inside.
+  assert.equal(placeTooltip({ left: 980, right: 995, top: 300, bottom: 320 }, size, viewport).left, 892);
+  // Near the left edge.
+  assert.equal(placeTooltip({ left: 0, right: 10, top: 300, bottom: 320 }, size, viewport).left, 8);
+});

@@ -81,7 +81,13 @@ export function ApplicationDetail() {
                     <div className="what">{STAGE_LABELS[event.stage]}{event.note ? ` · ${event.note}` : ""}</div>
                     <div className="when">{longDate(event.date)}</div>
                   </div>
-                  <span className="gap">{i > 0 ? `+${daysBetween(events[i - 1]!.date, event.date)}d` : ""}</span>
+                  {i > 0 ? (
+                    <span className="gap" data-tip={`${daysBetween(events[i - 1]!.date, event.date)} días\ndespués de ${STAGE_LABELS[events[i - 1]!.stage].toLowerCase()}`}>
+                      +{daysBetween(events[i - 1]!.date, event.date)}d
+                    </span>
+                  ) : (
+                    <span />
+                  )}
                 </li>
               ))}
               {summary && summary.state !== "closed" && (
