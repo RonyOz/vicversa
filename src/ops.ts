@@ -1,4 +1,4 @@
-import { mkdir, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
 import { basename, resolve } from "node:path";
 import { loadApplication, loadCatalog, ROOT } from "./catalog.js";
 import { buildHtml } from "./html.js";
@@ -11,6 +11,7 @@ import {
   funnel, pace, parseStage, summarize, timeline,
   type Funnel, type Pace, type State, type TrackSummary,
 } from "./tracking.js";
+import { piecesOf, usageIndex, type AppPieces, type UsageIndex } from "./usage.js";
 import { assess, verdict, type Assessment } from "./validate.js";
 
 /**
@@ -328,4 +329,135 @@ export async function getCvHtml(input: string): Promise<{ name: string; html: st
   const { name, app } = await openApplication(input);
   const catalog = await loadCatalog();
   return { name, html: await buildHtml(resolveDocument(app, catalog), catalog.theme) };
+}
+
+export interface CvListing {
+  name: string;
+  company: string | null;
+  role: string | null;
+  language: Language;
+  /** False for templates and unsent drafts. */
+  tracked: boolean;
+  state: State | null;
+  stage: Stage | null;
+  /** Date of the "applied" event, null when not tracked. */
+  applied: string | null;
+  summaryId: string | null;
+}
+
+/** Every CV in applications/, templates included: the panel's gallery. */
+export async function getCvList(today: string): Promise<CvListing[]> {
+  const list: CvListing[] = [];
+  for (const name of await applicationNames()) {
+    const app = await loadApplication(name);
+    const events = timeline(app);
+    const summary = summarize(name, app, today, DEFAULT_STALE_DAYS);
+    list.push({
+      name,
+      company: app.metadata.company ?? null,
+      role: app.metadata.role ?? null,
+      language: app.metadata.language,
+      tracked: summary !== null,
+      state: summary?.state ?? null,
+      stage: summary?.stage ?? null,
+      applied: events ? (events.find((e) => e.stage === "applied") ?? events[0]!).date : null,
+      summaryId: app.content.summary ?? null,
+    });
+  }
+  return list;
+}
+
+/** One CV with the catalog pieces it uses and its tracking state. */
+export async function getCvDetail(
+  input: string,
+  today: string,
+): Promise<{ name: string; path: string; application: Application; pieces: AppPieces; tracking: TrackSummary | null }> {
+  const name = await findApplication(input);
+  const [application, catalog] = await Promise.all([loadApplication(name), loadCatalog()]);
+  return {
+    name,
+    path: applicationPath(name),
+    application,
+    pieces: piecesOf(application, catalog),
+    tracking: summarize(name, application, today, DEFAULT_STALE_DAYS),
+  };
+}
+
+/** The whole catalog plus who uses each piece: the panel's explorer. */
+export async function getCatalogExplorer(today: string): Promise<{
+  catalog: Partial<Record<CatalogPart, unknown>>;
+  usage: UsageIndex;
+  apps: Record<string, { company: string | null; role: string | null; language: Language; tracked: boolean; state: State | null }>;
+}> {
+  const loaded = await loadCatalog();
+  const byApp: Record<string, AppPieces> = {};
+  const apps: Awaited<ReturnType<typeof getCatalogExplorer>>["apps"] = {};
+  for (const name of await applicationNames()) {
+    const app = await loadApplication(name);
+    byApp[name] = piecesOf(app, loaded);
+    const summary = summarize(name, app, today, DEFAULT_STALE_DAYS);
+    apps[name] = {
+      company: app.metadata.company ?? null,
+      role: app.metadata.role ?? null,
+      language: app.metadata.language,
+      tracked: summary !== null,
+      state: summary?.state ?? null,
+    };
+  }
+  return { catalog: await getCatalog(CATALOG_PARTS), usage: usageIndex(byApp), apps };
+}
+
+export interface FitEntry {
+  ok: boolean;
+  fits: boolean;
+  used: number;
+  available: number;
+  spareLines: number;
+  overflowLines: number;
+  error?: string;
+}
+
+/** Fingerprint of everything that changes a layout: any edit invalidates the fit cache. */
+async function layoutFingerprint(): Promise<string> {
+  const files: string[] = [resolve(ROOT, "theme.yaml")];
+  for (const dir of ["catalog", "applications"]) {
+    const names = await readdir(resolve(ROOT, dir));
+    files.push(...names.filter((n) => n.endsWith(".yaml")).map((n) => resolve(ROOT, dir, n)));
+  }
+  const stamps = await Promise.all(files.map(async (file) => `${file}:${(await stat(file)).mtimeMs}`));
+  return stamps.sort().join("|");
+}
+
+let fitCache: { key: string; fit: Promise<Record<string, FitEntry>> } | null = null;
+
+/**
+ * One-page fit of every CV. Measuring all of them takes seconds in Chromium,
+ * so the result is kept until a YAML or the theme changes.
+ */
+export async function getFit(): Promise<Record<string, FitEntry>> {
+  const key = await layoutFingerprint();
+  if (fitCache?.key !== key) {
+    const fit = validateApplications().then((results) =>
+      Object.fromEntries(
+        results.map((r): [string, FitEntry] => [
+          r.name,
+          r.assessment
+            ? {
+                ok: r.assessment.ok,
+                fits: r.assessment.fits,
+                used: r.assessment.used,
+                available: r.assessment.available,
+                spareLines: r.assessment.spareLines,
+                overflowLines: r.assessment.overflowLines,
+              }
+            : { ok: false, fits: false, used: 0, available: 0, spareLines: 0, overflowLines: 0, error: r.error },
+        ]),
+      ),
+    );
+    fitCache = { key, fit };
+    fit.catch(() => {
+      if (fitCache?.fit === fit) fitCache = null;
+    });
+  }
+  return fitCache.fit;
 }

@@ -81,3 +81,39 @@ test("expected failures are 400 with the actionable message", async () => {
 test("unknown API routes are 404", async () => {
   assert.equal((await fetch(`${base}/api/nope`)).status, 404);
 });
+
+test("GET /api/cvs lists every CV, templates included", async () => {
+  const data = await (await fetch(`${base}/api/cvs`)).json();
+  assert.equal(data.cvs.length, 38);
+  const template = data.cvs.find((c: { name: string }) => c.name === "baseline-es");
+  assert.equal(template.tracked, false);
+  assert.equal(template.applied, null);
+  const globex = data.cvs.find((c: { name: string }) => c.name === "2026-10-globex-desarrollador-sistemas-cuentas");
+  assert.equal(globex.applied, "2026-10-01");
+  assert.equal(globex.summaryId, "globex_cuentas_lifecycle");
+});
+
+test("GET /api/cvs/:name returns its pieces and tracking", async () => {
+  const data = await (await fetch(`${base}/api/cvs/2026-10-globex-desarrollador-sistemas-cuentas`)).json();
+  assert.equal(data.pieces.summary, "globex_cuentas_lifecycle");
+  assert.equal(data.pieces.items[0].id, "northwind");
+  assert.equal(data.tracking.state, "active");
+});
+
+test("GET /api/catalog returns every part with usage", async () => {
+  const data = await (await fetch(`${base}/api/catalog`)).json();
+  assert.ok(Array.isArray(data.catalog.experiences) && data.catalog.skills.skills.length > 0);
+  assert.ok(data.usage.pieces["summary:globex_cuentas_lifecycle"].includes("2026-10-globex-desarrollador-sistemas-cuentas"));
+  assert.equal(data.apps["baseline-es"].tracked, false);
+});
+
+test("GET /api/fit measures every CV once and then serves the cache", async () => {
+  const first = await (await fetch(`${base}/api/fit`)).json();
+  assert.equal(Object.keys(first.fit).length, 38);
+  assert.equal(first.fit["baseline-es"].ok, true);
+  assert.equal(typeof first.fit["baseline-es"].spareLines, "number");
+  const started = Date.now();
+  const second = await (await fetch(`${base}/api/fit`)).json();
+  assert.ok(Date.now() - started < 500, "second call should be cached");
+  assert.deepEqual(second, first);
+});

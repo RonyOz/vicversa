@@ -1,7 +1,8 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { resolve } from "node:path";
 import {
-  DEFAULT_STALE_DAYS, DEFAULT_WEEKS, getApplication, getCvHtml, getDashboard, trackEvent, undoLastEvent,
+  DEFAULT_STALE_DAYS, DEFAULT_WEEKS, getApplication, getCatalogExplorer, getCvDetail, getCvHtml, getCvList, getDashboard,
+  getFit, trackEvent, undoLastEvent,
 } from "../ops.js";
 import { localToday } from "../tracking.js";
 
@@ -48,6 +49,11 @@ async function api(request: IncomingMessage, response: ServerResponse, today: st
     if (method === "GET" && application) {
       return send(response, 200, await getApplication(application[1]!, { today }));
     }
+    if (method === "GET" && path === "/api/cvs") return send(response, 200, { cvs: await getCvList(today) });
+    const cvDetail = /^\/api\/cvs\/([^/]+)$/.exec(path);
+    if (method === "GET" && cvDetail) return send(response, 200, await getCvDetail(cvDetail[1]!, today));
+    if (method === "GET" && path === "/api/fit") return send(response, 200, { fit: await getFit() });
+    if (method === "GET" && path === "/api/catalog") return send(response, 200, await getCatalogExplorer(today));
     const cv = /^\/api\/cv\/([^/]+)\.html$/.exec(path);
     if (method === "GET" && cv) {
       const { html } = await getCvHtml(cv[1]!);
