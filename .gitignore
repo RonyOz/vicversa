@@ -3,5 +3,7 @@ out/
 *.log
 .DS_Store
 .agents/
-.opencode/.vicversa-cache/
+.opencode/
+.vicversa-cache/
 .env
+.superpowers/
