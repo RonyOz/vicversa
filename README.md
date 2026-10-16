@@ -38,9 +38,20 @@ pnpm test                           # unit tests
 pnpm ui                             # http://localhost:4747 (localhost only)
 ```
 
-Pace, the response funnel and every application's timeline, with a form to
-record what happened. Server-rendered over `src/ops.ts`; no client JS, no
-database — the YAML files stay the source of truth.
+A local React app (Vite in middleware mode, one process) over a JSON API that
+wraps `src/ops.ts`, like the CLI and the MCP server do:
+
+- **Resumen** — KPIs, the response funnel (each segment links to its
+  applications), pace as a daily calendar, recent activity.
+- **Convocatorias** — tabs by state with counts, search (`/`), stage and
+  language filters, sorting; all of it lives in the URL.
+- **Detail** — vertical timeline, undo/reopen, a form with stage buttons,
+  note suggestions and a date picker that marks the application's events,
+  the posting's notes and link, and the CV page exactly as printed.
+
+The YAML files stay the source of truth; the only writes are recording and
+undoing events. CVs and catalog views are next (see
+`docs/superpowers/specs/2026-10-15-panel-v2-design.md`).
 
 ## MCP server (how agents use it)
 

@@ -6,7 +6,7 @@ import { after, before, test } from "node:test";
 import { createUiServer } from "../src/ui/server.js";
 
 const APPS = resolve(import.meta.dirname, "../applications");
-const server = createUiServer({ today: () => "2026-10-14" });
+const server = await createUiServer({ today: () => "2026-10-14", vite: false });
 let base = "";
 
 before(async () => {
@@ -15,62 +15,69 @@ before(async () => {
 });
 after(() => new Promise<void>((done) => server.close(() => done())));
 
-const post = (path: string, fields: Record<string, string>) =>
-  fetch(`${base}${path}`, { method: "POST", body: new URLSearchParams(fields), redirect: "manual" });
+const postJson = (path: string, body: unknown) =>
+  fetch(`${base}${path}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 
-test("the dashboard renders the funnel, pace and every tracked application", async () => {
-  const response = await fetch(base);
+const withScratch = async (name: string, fn: (path: string) => Promise<void>) => {
+  const scratch = join(APPS, `${name}.yaml`);
+  copyFileSync(join(APPS, "2026-10-bluth-junior-python-developer.yaml"), scratch);
+  try {
+    await fn(scratch);
+  } finally {
+    rmSync(scratch, { force: true });
+  }
+};
+
+test("GET /api/dashboard returns rows with send date, language and posting url", async () => {
+  const response = await fetch(`${base}/api/dashboard`);
+  assert.equal(response.status, 200);
+  const data = await response.json();
+  assert.equal(data.today, "2026-10-14");
+  assert.equal(data.funnel.total, data.rows.length);
+  const globex = data.rows.find((r: { name: string }) => r.name === "2026-10-globex-desarrollador-sistemas-cuentas");
+  assert.equal(globex.applied, "2026-10-01");
+  assert.equal(globex.language, "es");
+  assert.ok("url" in globex);
+  assert.ok(!data.rows.some((r: { name: string }) => r.name === "baseline-es")); // templates are not tracked
+});
+
+test("GET /api/applications/:name returns metadata notes and timeline", async () => {
+  const data = await (await fetch(`${base}/api/applications/2026-10-globex-desarrollador-sistemas-cuentas`)).json();
+  assert.equal(data.application.metadata.company, "Globex");
+  assert.match(data.application.metadata.notes, /posting/);
+  assert.deepEqual(data.timeline[0], { date: "2026-10-01", stage: "applied" });
+});
+
+test("GET /api/cv/:name.html serves the CV page itself", async () => {
+  const response = await fetch(`${base}/api/cv/baseline-es.html`);
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /text\/html/);
-  const html = await response.text();
-  assert.match(html, /Enviadas/);
-  assert.match(html, /Ritmo/);
-  assert.match(html, /2026-10-globex-desarrollador-sistemas-cuentas/);
-  assert.doesNotMatch(html, /baseline-es/); // templates are not tracked
-  // Every row says when it was sent, so time can be measured from there.
-  assert.match(html, /aplicada 1 oct/); // Globex
-  assert.match(html, /aplicada 23 sep<\/div><div[^>]*>rechazo 14 oct · 21d/); // Initech SWE: whole process
+  assert.match(await response.text(), /<!doctype html>/i);
 });
 
-test("recording an event redirects back with a confirmation", async () => {
-  const scratch = join(APPS, "zz-ui-test.yaml");
-  copyFileSync(join(APPS, "2026-10-bluth-junior-python-developer.yaml"), scratch);
-  try {
-    const response = await post("/track", { name: "zz-ui-test", stage: "interview", date: "2026-10-13", note: "RH" });
-    assert.equal(response.status, 303);
-    assert.match(response.headers.get("location") ?? "", /^\/\?ok=/);
+test("POST /api/track records and POST /api/undo removes it", async () => {
+  await withScratch("zz-ui-api", async (scratch) => {
+    const tracked = await postJson("/api/track", { name: "zz-ui-api", stage: "interview", date: "2026-10-13", note: "RH" });
+    assert.equal(tracked.status, 200);
+    assert.equal((await tracked.json()).summary.stage, "interview");
     assert.match(readFileSync(scratch, "utf8"), /stage: interview, note: "RH"/);
 
-    const page = await (await fetch(`${base}${response.headers.get("location")}`)).text();
-    assert.match(page, /zz-ui-test: interview/);
-  } finally {
-    rmSync(scratch, { force: true });
-  }
+    const undone = await postJson("/api/undo", { name: "zz-ui-api" });
+    assert.equal(undone.status, 200);
+    assert.equal((await undone.json()).removed.stage, "interview");
+    assert.doesNotMatch(readFileSync(scratch, "utf8"), /stage: interview/);
+  });
 });
 
-test("a closed application can be reopened from the panel", async () => {
-  const scratch = join(APPS, "zz-ui-undo.yaml");
-  copyFileSync(join(APPS, "2026-10-bluth-junior-python-developer.yaml"), scratch);
-  try {
-    await post("/track", { name: "zz-ui-undo", stage: "rejected", date: "2026-10-12" });
-    const page = await (await fetch(base)).text();
-    assert.match(page, /reabrir/);
-    const response = await post("/undo", { name: "zz-ui-undo" });
-    assert.equal(response.status, 303);
-    assert.match(decodeURIComponent(response.headers.get("location") ?? ""), /ok=.*rechazo/);
-    assert.doesNotMatch(readFileSync(scratch, "utf8"), /stage: rejected/);
-  } finally {
-    rmSync(scratch, { force: true });
-  }
+test("expected failures are 400 with the actionable message", async () => {
+  const future = await postJson("/api/track", { name: "2026-10-monarch-ai-fullstack-student", stage: "interview", date: "2099-01-01" });
+  assert.equal(future.status, 400);
+  assert.match((await future.json()).error, /in the future/);
+  const missing = await fetch(`${base}/api/applications/initech`);
+  assert.equal(missing.status, 400);
+  assert.match((await missing.json()).error, /Did you mean/);
 });
 
-test("an invalid event redirects back with the error and writes nothing", async () => {
-  const response = await post("/track", { name: "2026-10-monarch-ai-fullstack-student", stage: "interview", date: "2099-01-01" });
-  assert.equal(response.status, 303);
-  const location = response.headers.get("location") ?? "";
-  assert.match(decodeURIComponent(location), /error=.*in the future/);
-});
-
-test("unknown paths are 404", async () => {
-  assert.equal((await fetch(`${base}/nope`)).status, 404);
+test("unknown API routes are 404", async () => {
+  assert.equal((await fetch(`${base}/api/nope`)).status, 404);
 });

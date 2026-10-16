@@ -184,7 +184,7 @@ export async function getStatus(options: { today: string; staleDays?: number; we
 
 export interface Dashboard extends Status {
   /** Each tracked application with its full timeline, same order as `applications`. */
-  rows: (TrackSummary & { events: TrackingEvent[] })[];
+  rows: (TrackSummary & { events: TrackingEvent[]; applied: string; language: Language; url: string | null })[];
 }
 
 /** Status plus every timeline: what the panel draws. */
@@ -196,7 +196,13 @@ export async function getDashboard(options: { today: string; staleDays?: number;
     const events = timeline(app);
     const summary = summarize(name, app, options.today, staleDays);
     if (!events || !summary) continue;
-    rows.push({ ...summary, events });
+    rows.push({
+      ...summary,
+      events,
+      applied: (events.find((event) => event.stage === "applied") ?? events[0]!).date,
+      language: app.metadata.language,
+      url: app.metadata.url ?? null,
+    });
   }
   rows.sort((a, b) => a.daysSince - b.daysSince);
   const timelines = rows.map((row) => row.events);
@@ -205,7 +211,7 @@ export async function getDashboard(options: { today: string; staleDays?: number;
     staleDays,
     pace: pace(timelines, options.today, options.weeks ?? DEFAULT_WEEKS),
     funnel: funnel(timelines, options.today, staleDays),
-    applications: rows.map(({ events, ...summary }) => summary),
+    applications: rows.map(({ events, applied, language, url, ...summary }) => summary),
     rows,
   };
 }
@@ -315,4 +321,11 @@ export async function undoLastEvent(
     const summary = summarize(name, await loadApplication(name), today, DEFAULT_STALE_DAYS);
     return { name, removed, events, summary };
   });
+}
+
+/** The CV page exactly as the PDF is printed from it: what the panel shows in an iframe. */
+export async function getCvHtml(input: string): Promise<{ name: string; html: string }> {
+  const { name, app } = await openApplication(input);
+  const catalog = await loadCatalog();
+  return { name, html: await buildHtml(resolveDocument(app, catalog), catalog.theme) };
 }

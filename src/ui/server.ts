@@ -1,82 +1,110 @@
-import { createServer, type IncomingMessage, type Server } from "node:http";
-import { fontFaceCss } from "../fonts.js";
-import { DEFAULT_STALE_DAYS, DEFAULT_WEEKS, getDashboard, trackEvent, undoLastEvent } from "../ops.js";
-import { STAGE_LABELS } from "./page.js";
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
+import { resolve } from "node:path";
+import {
+  DEFAULT_STALE_DAYS, DEFAULT_WEEKS, getApplication, getCvHtml, getDashboard, trackEvent, undoLastEvent,
+} from "../ops.js";
 import { localToday } from "../tracking.js";
-import { renderPage } from "./page.js";
 
 /**
- * The tracking panel: server-rendered pages over src/ops.ts, plain form posts,
- * no client JavaScript and no database. The YAML files stay the source of truth.
+ * The panel: a JSON API over src/ops.ts under /api, and the React app (served
+ * by Vite in middleware mode) for everything else. One process, localhost only.
+ * The YAML files stay the source of truth; the only writes are track and undo.
  */
 
-async function readForm(request: IncomingMessage): Promise<URLSearchParams> {
+const CLIENT_ROOT = resolve(import.meta.dirname, "client");
+
+class BadRequest extends Error {}
+
+async function readJson(request: IncomingMessage): Promise<Record<string, unknown>> {
   const chunks: Buffer[] = [];
   for await (const chunk of request) chunks.push(chunk as Buffer);
-  return new URLSearchParams(Buffer.concat(chunks).toString("utf8"));
+  try {
+    const value: unknown = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+    if (value && typeof value === "object" && !Array.isArray(value)) return value as Record<string, unknown>;
+  } catch {
+    // fall through
+  }
+  throw new BadRequest("Body must be a JSON object.");
 }
 
-export function createUiServer(options: { today?: () => string } = {}): Server {
-  const today = options.today ?? localToday;
-  let fonts: Promise<string> | undefined;
+const text = (value: unknown) => (typeof value === "string" && value !== "" ? value : undefined);
 
-  return createServer(async (request, response) => {
-    const url = new URL(request.url ?? "/", "http://localhost");
-    try {
-      if (request.method === "GET" && url.pathname === "/") {
-        const ok = url.searchParams.get("ok");
-        const error = url.searchParams.get("error");
-        const flash = ok ? { kind: "ok" as const, text: ok } : error ? { kind: "error" as const, text: error } : undefined;
-        const data = await getDashboard({ today: today(), staleDays: DEFAULT_STALE_DAYS, weeks: DEFAULT_WEEKS });
-        fonts ??= fontFaceCss();
-        response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
-        response.end(renderPage(data, await fonts, flash));
-        return;
-      }
+function send(response: ServerResponse, status: number, body: unknown) {
+  response.writeHead(status, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
+  response.end(JSON.stringify(body));
+}
 
-      if (request.method === "POST" && url.pathname === "/track") {
-        const form = await readForm(request);
-        const name = form.get("name") ?? "";
-        let location: string;
-        try {
-          const result = await trackEvent(
-            name,
-            { stage: form.get("stage") ?? "", date: form.get("date") || undefined, note: form.get("note") ?? undefined },
-            today(),
-          );
-          const text = `${result.name}: ${result.event.stage} el ${result.event.date} registrado`;
-          location = `/?ok=${encodeURIComponent(text)}#${encodeURIComponent(result.name)}`;
-        } catch (error) {
-          const text = error instanceof Error ? error.message : String(error);
-          location = `/?error=${encodeURIComponent(text)}#${encodeURIComponent(name)}`;
-        }
-        response.writeHead(303, { location });
-        response.end();
-        return;
-      }
+/** Routes /api/*; returns false when the path is not an API route at all. */
+async function api(request: IncomingMessage, response: ServerResponse, today: string): Promise<void> {
+  const url = new URL(request.url ?? "/", "http://localhost");
+  const path = decodeURIComponent(url.pathname);
+  const method = request.method ?? "GET";
 
-      if (request.method === "POST" && url.pathname === "/undo") {
-        const name = (await readForm(request)).get("name") ?? "";
-        let location: string;
-        try {
-          const { removed } = await undoLastEvent(name, today());
-          const text = `${name}: quitado «${STAGE_LABELS[removed.stage]} ${removed.date}»`;
-          location = `/?ok=${encodeURIComponent(text)}#${encodeURIComponent(name)}`;
-        } catch (error) {
-          const text = error instanceof Error ? error.message : String(error);
-          location = `/?error=${encodeURIComponent(text)}#${encodeURIComponent(name)}`;
-        }
-        response.writeHead(303, { location });
-        response.end();
-        return;
-      }
-
-      response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
-      response.end("Not found");
-    } catch (error) {
-      console.error(error);
-      response.writeHead(500, { "content-type": "text/plain; charset=utf-8" });
-      response.end(error instanceof Error ? error.message : String(error));
+  try {
+    if (method === "GET" && path === "/api/dashboard") {
+      return send(response, 200, await getDashboard({ today, staleDays: DEFAULT_STALE_DAYS, weeks: DEFAULT_WEEKS }));
     }
+    const application = /^\/api\/applications\/([^/]+)$/.exec(path);
+    if (method === "GET" && application) {
+      return send(response, 200, await getApplication(application[1]!, { today }));
+    }
+    const cv = /^\/api\/cv\/([^/]+)\.html$/.exec(path);
+    if (method === "GET" && cv) {
+      const { html } = await getCvHtml(cv[1]!);
+      response.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" });
+      response.end(html);
+      return;
+    }
+    if (method === "POST" && path === "/api/track") {
+      const body = await readJson(request);
+      const result = await trackEvent(
+        String(body["name"] ?? ""),
+        { stage: String(body["stage"] ?? ""), date: text(body["date"]), note: text(body["note"]) },
+        today,
+      );
+      return send(response, 200, result);
+    }
+    if (method === "POST" && path === "/api/undo") {
+      const body = await readJson(request);
+      return send(response, 200, await undoLastEvent(String(body["name"] ?? ""), today));
+    }
+    return send(response, 404, { error: `No API route ${method} ${path}` });
+  } catch (error) {
+    // ops throws plain Errors with messages meant for the user (bad name, future date, closed…).
+    return send(response, 400, { error: error instanceof Error ? error.message : String(error) });
+  }
+}
+
+export async function createUiServer(options: { today?: () => string; vite?: boolean } = {}): Promise<Server> {
+  const today = options.today ?? localToday;
+  const vite =
+    options.vite === false
+      ? null
+      : await (async () => {
+          const { createServer: createVite } = await import("vite");
+          const { default: react } = await import("@vitejs/plugin-react");
+          return createVite({
+            root: CLIENT_ROOT,
+            configFile: false,
+            plugins: [react()],
+            appType: "spa",
+            server: { middlewareMode: true },
+            logLevel: "warn",
+          });
+        })();
+
+  const server = createServer((request, response) => {
+    if ((request.url ?? "").startsWith("/api/")) {
+      void api(request, response, today());
+      return;
+    }
+    if (vite) {
+      vite.middlewares(request, response);
+      return;
+    }
+    response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
+    response.end("Not found (UI disabled)");
   });
+  server.on("close", () => void vite?.close());
+  return server;
 }
