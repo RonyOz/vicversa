@@ -103,51 +103,56 @@ function round(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
-/** Runs inside the browser. Keep it self-contained: it is serialized to get there. */
+/**
+ * Runs inside the browser. Keep it self-contained: it is serialized to get there.
+ *
+ * Templates are free to name their classes; what is measured is found through
+ * the data-measure contract (see src/templates/kit.tsx).
+ */
 function measureInPage({ lineHeightPt }: { lineHeightPt: number }) {
   const PX_TO_PT = 0.75;
   const pt = (px: number) => Math.round(px * PX_TO_PT * 100) / 100;
 
-  const content = document.querySelector<HTMLElement>(".content");
-  if (!content) throw new Error("No .content element to measure");
+  const content = document.querySelector<HTMLElement>('[data-measure="content"]');
+  if (!content) throw new Error('The template has no [data-measure="content"] element to measure');
 
-  const sections = [...document.querySelectorAll<HTMLElement>(".section")].map((el) => ({
+  const sections = [...document.querySelectorAll<HTMLElement>('[data-measure="section"]')].map((el) => ({
     id: el.dataset.section ?? "?",
     height: pt(el.getBoundingClientRect().height + parseFloat(getComputedStyle(el).marginTop)),
   }));
 
-  const items = [...document.querySelectorAll<HTMLElement>(".item")].map((el) => {
+  const items = [...document.querySelectorAll<HTMLElement>('[data-measure="item"]')].map((el) => {
     const height = el.getBoundingClientRect().height;
     const gap = parseFloat(getComputedStyle(el).marginTop) || 0;
     return {
       id: el.dataset.item ?? "?",
-      section: el.closest<HTMLElement>(".section")?.dataset.section ?? "?",
+      section: el.closest<HTMLElement>('[data-measure="section"]')?.dataset.section ?? "?",
       height: pt(height),
       withGap: pt(height + gap),
     };
   });
 
-  const bullets = [...document.querySelectorAll<HTMLElement>(".bullets li")].map((el) => {
+  const bullets = [...document.querySelectorAll<HTMLElement>('[data-measure="bullet"]')].map((el) => {
     const height = pt(el.getBoundingClientRect().height);
     return {
       id: el.dataset.bullet ?? "?",
-      item: el.closest<HTMLElement>(".item")?.dataset.item ?? "?",
+      item: el.closest<HTMLElement>('[data-measure="item"]')?.dataset.item ?? "?",
       height,
       lines: Math.round(height / lineHeightPt),
     };
   });
 
-  const skillOverflows = [...document.querySelectorAll<HTMLElement>(".skill-row")]
+  const skillOverflows = [...document.querySelectorAll<HTMLElement>('[data-measure="skill-row"]')]
     .map((row) => {
-      const value = row.querySelector<HTMLElement>(".skill-row__value")!;
+      const value = row.querySelector<HTMLElement>('[data-measure="skill-value"]')!;
       return {
-        label: row.querySelector<HTMLElement>(".skill-row__label")?.textContent ?? "?",
+        label: row.querySelector<HTMLElement>('[data-measure="skill-label"]')?.textContent ?? "?",
         overflow: pt(value.scrollWidth - value.clientWidth),
       };
     })
     .filter((row) => row.overflow > 0.5);
 
-  const summaries = [...document.querySelectorAll<HTMLElement>(".probe [data-summary]")].map((el) => ({
+  const summaries = [...document.querySelectorAll<HTMLElement>('[data-measure="summary-probe"]')].map((el) => ({
     id: el.dataset.summary ?? "?",
     height: pt(el.getBoundingClientRect().height),
   }));

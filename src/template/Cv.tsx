@@ -30,7 +30,7 @@ function SkillValue({ items, theme }: { items: { name: string; detail?: string }
 
 function Item({ item }: { item: ResolvedItem }) {
   return (
-    <div className="item" data-item={item.id}>
+    <div className="item" data-measure="item" data-item={item.id}>
       <div className="item__head">
         <span>
           {item.href ? (
@@ -45,7 +45,7 @@ function Item({ item }: { item: ResolvedItem }) {
       {item.bullets.length > 0 && (
         <ul className="bullets">
           {item.bullets.map((bullet) => (
-            <li key={bullet.id} data-bullet={bullet.id}>{bullet.text}</li>
+            <li key={bullet.id} data-measure="bullet" data-bullet={bullet.id}>{bullet.text}</li>
           ))}
         </ul>
       )}
@@ -59,12 +59,12 @@ function SectionBody({ section, theme }: { section: ResolvedSection; theme: Them
       return (
         <>
           {section.rows.map((row, i) => (
-            <div className="skill-row" key={i}>
-              <span className="skill-row__label">
+            <div className="skill-row" data-measure="skill-row" key={i}>
+              <span className="skill-row__label" data-measure="skill-label">
                 {row.label}
                 {theme.skills.labelSuffix}
               </span>
-              <span className="skill-row__value">
+              <span className="skill-row__value" data-measure="skill-value">
                 <SkillValue items={row.items} theme={theme} />
               </span>
             </div>
@@ -123,7 +123,7 @@ function SectionBody({ section, theme }: { section: ResolvedSection; theme: Them
 export function Cv({ doc, theme }: { doc: ResolvedDocument; theme: Theme }) {
   return (
     <div className="page">
-      <div className="content">
+      <div className="content" data-measure="content">
         <h1 className="name">{doc.name}</h1>
 
         <p className="contact">
@@ -140,7 +140,7 @@ export function Cv({ doc, theme }: { doc: ResolvedDocument; theme: Theme }) {
         {doc.summary && <p className="summary">{doc.summary}</p>}
 
         {doc.sections.map((section) => (
-          <section className="section" key={section.id} data-section={section.id}>
+          <section className="section" key={section.id} data-measure="section" data-section={section.id}>
             <h2 className="section__title">{section.title}</h2>
             <hr className="rule rule--section" />
             <div className="section__body">
@@ -157,7 +157,7 @@ export function Cv({ doc, theme }: { doc: ResolvedDocument; theme: Theme }) {
       */}
       <div className="probe" aria-hidden="true">
         {doc.summaryProbes.map((probe) => (
-          <p className="summary" data-summary={probe.id} key={probe.id}>{probe.text}</p>
+          <p className="summary" data-measure="summary-probe" data-summary={probe.id} key={probe.id}>{probe.text}</p>
         ))}
       </div>
     </div>
