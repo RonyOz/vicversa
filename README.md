@@ -49,9 +49,18 @@ wraps `src/ops.ts`, like the CLI and the MCP server do:
   note suggestions and a date picker that marks the application's events,
   the posting's notes and link, and the CV page exactly as printed.
 
-The YAML files stay the source of truth; the only writes are recording and
-undoing events. CVs and catalog views are next (see
-`docs/superpowers/specs/2026-10-15-panel-v2-design.md`).
+- **CVs** — every CV as a real-page thumbnail with its one-page fit (cached
+  until a YAML changes) and tracking state; each opens with its fit meter and
+  the catalog pieces it uses, in order.
+- **Catálogo** — summaries, experience, projects, certifications, education
+  and skills, each with how many CVs use it (bullets too), an "unused"
+  filter and an ES/EN toggle; a piece shows both languages and every CV that
+  uses it.
+
+Everything links: application → its CV → a piece → every CV with that piece →
+their applications. The YAML files stay the source of truth; the only writes
+are recording and undoing events. Design:
+`docs/superpowers/specs/2026-10-15-panel-v2-design.md`.
 
 ## MCP server (how agents use it)
 

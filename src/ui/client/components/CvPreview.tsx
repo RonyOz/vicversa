@@ -9,7 +9,7 @@ const PAGE_HEIGHT = 1123;
  * its column. Scaling the whole page keeps line breaks exactly as printed;
  * shrinking the iframe instead would reflow the text.
  */
-export function CvPreview({ src, title }: { src: string; title: string }) {
+export function CvPreview({ src, title, thumbnail = false }: { src: string; title: string; thumbnail?: boolean }) {
   const box = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.5);
 
@@ -22,10 +22,11 @@ export function CvPreview({ src, title }: { src: string; title: string }) {
   }, []);
 
   return (
-    <div ref={box} className="cv-box" style={{ height: PAGE_HEIGHT * scale }}>
+    <div ref={box} className={`cv-box${thumbnail ? " thumb" : ""}`} style={{ height: PAGE_HEIGHT * scale }}>
       <iframe
         src={src}
         title={title}
+        tabIndex={thumbnail ? -1 : undefined}
         loading="lazy"
         style={{ width: PAGE_WIDTH, height: PAGE_HEIGHT, transform: `scale(${scale})` }}
       />

@@ -57,9 +57,9 @@ export function ApplicationDetail() {
                 <ExternalLink /> Ver convocatoria
               </a>
             )}
-            <a className="btn" href={cvUrl} target="_blank" rel="noreferrer">
-              <FileText /> Abrir CV
-            </a>
+            <Link className="btn" to={`/cvs/${encodeURIComponent(name)}`} viewTransition>
+              <FileText /> Ver CV y sus piezas
+            </Link>
           </div>
         </div>
       </header>

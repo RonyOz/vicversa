@@ -2,13 +2,17 @@ import { BookOpen, FileStack, LayoutDashboard, ListChecks, type LucideIcon } fro
 import { NavLink, Outlet, Route, Routes } from "react-router";
 import { ApplicationDetail } from "./pages/ApplicationDetail.js";
 import { Applications } from "./pages/Applications.js";
+import { Catalog } from "./pages/Catalog.js";
+import { CvGallery } from "./pages/CvGallery.js";
+import { CvView } from "./pages/CvView.js";
+import { Piece } from "./pages/Piece.js";
 import { Summary } from "./pages/Summary.js";
 
 const NAV: { to: string; label: string; icon: LucideIcon; soon?: boolean }[] = [
   { to: "/", label: "Resumen", icon: LayoutDashboard },
   { to: "/convocatorias", label: "Convocatorias", icon: ListChecks },
-  { to: "/cvs", label: "CVs", icon: FileStack, soon: true },
-  { to: "/catalogo", label: "Catálogo", icon: BookOpen, soon: true },
+  { to: "/cvs", label: "CVs", icon: FileStack },
+  { to: "/catalogo", label: "Catálogo", icon: BookOpen },
 ];
 
 function Shell() {
@@ -55,6 +59,10 @@ export function App() {
         <Route index element={<Summary />} />
         <Route path="convocatorias" element={<Applications />} />
         <Route path="convocatorias/:name" element={<ApplicationDetail />} />
+        <Route path="cvs" element={<CvGallery />} />
+        <Route path="cvs/:name" element={<CvView />} />
+        <Route path="catalogo" element={<Catalog />} />
+        <Route path="catalogo/:kind/:id" element={<Piece />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
