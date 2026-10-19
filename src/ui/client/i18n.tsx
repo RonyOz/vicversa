@@ -18,6 +18,8 @@ const en = {
   "nav.catalog": "Catalog",
   "nav.data": "Data folder",
   "nav.language": "Español",
+  "nav.collapse": "Collapse sidebar",
+  "nav.expand": "Expand sidebar",
 
   "state.active": "Active",
   "state.stale": "No response",
@@ -187,6 +189,8 @@ const es: Messages = {
   "nav.catalog": "Catálogo",
   "nav.data": "Carpeta de datos",
   "nav.language": "English",
+  "nav.collapse": "Contraer barra lateral",
+  "nav.expand": "Expandir barra lateral",
 
   "state.active": "Activa",
   "state.stale": "Sin respuesta",

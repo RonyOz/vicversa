@@ -8,7 +8,7 @@ import { placeTooltip } from "./tooltip-place.js";
  * and calendar draw hundreds of small marks.
  */
 export function TooltipLayer() {
-  const [tip, setTip] = useState<{ text: string; rect: DOMRect } | null>(null);
+  const [tip, setTip] = useState<{ text: string; rect: DOMRect; side: "auto" | "right" } | null>(null);
   const [position, setPosition] = useState<{ left: number; top: number; place: string } | null>(null);
   const box = useRef<HTMLDivElement>(null);
 
@@ -35,7 +35,11 @@ export function TooltipLayer() {
       timer = setTimeout(
         () => {
           visible = true;
-          setTip({ text: element.getAttribute("data-tip") ?? "", rect: element.getBoundingClientRect() });
+          setTip({
+            text: element.getAttribute("data-tip") ?? "",
+            rect: element.getBoundingClientRect(),
+            side: element.getAttribute("data-tip-side") === "right" ? "right" : "auto",
+          });
         },
         visible ? 0 : 140,
       );
@@ -65,7 +69,7 @@ export function TooltipLayer() {
   useLayoutEffect(() => {
     if (!tip || !box.current) return setPosition(null);
     const { width, height } = box.current.getBoundingClientRect();
-    setPosition(placeTooltip(tip.rect, { width, height }, { width: window.innerWidth, height: window.innerHeight }));
+    setPosition(placeTooltip(tip.rect, { width, height }, { width: window.innerWidth, height: window.innerHeight }, tip.side));
   }, [tip]);
 
   if (!tip) return null;

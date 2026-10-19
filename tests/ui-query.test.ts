@@ -120,3 +120,12 @@ test("every message exists and reads in both languages", async () => {
   assert.equal(es("apps.count", 2), "2 convocatorias");
   assert.equal(en("cvs.lede", 15), "15 versions of one catalog, laid out and measured exactly as printed.");
 });
+
+test("placeTooltip can sit to the right of its target, vertically centered", async () => {
+  const { placeTooltip } = await import("../src/ui/client/tooltip-place.js");
+  const viewport = { width: 1000, height: 800 };
+  assert.deepEqual(
+    placeTooltip({ left: 10, right: 50, top: 100, bottom: 140 }, { width: 100, height: 30 }, viewport, "right"),
+    { left: 58, top: 105, place: "right" },
+  );
+});

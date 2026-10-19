@@ -98,12 +98,33 @@ button { font: inherit; color: inherit; }
 }
 
 /* ── Shell ─────────────────────────────────────────────────────────────── */
-.shell { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+.shell { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; transition: grid-template-columns 0.2s var(--ease); }
+.shell.collapsed { grid-template-columns: 68px 1fr; }
 .sidebar {
   position: sticky; top: 0; height: 100vh; padding: 26px 14px 18px;
   border-right: 1px solid var(--grid); display: flex; flex-direction: column; gap: 2px;
 }
-.brand { padding: 0 10px 26px; }
+.brand { padding: 0 2px 26px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 30px; }
+.collapse-toggle {
+  display: inline-flex; padding: 5px; border-radius: 7px; border: 0; background: transparent; color: var(--muted); cursor: pointer; flex: none;
+}
+.collapse-toggle:hover { background: var(--surface-2); color: var(--ink); }
+/* The collapsed brand keeps the one bold thing: the highlighted CV. */
+.monogram em {
+  position: relative; z-index: 0; color: var(--mark-ink); font: italic 400 24px/1 var(--serif); padding: 0 0.14em 0 0.08em;
+}
+.monogram em::before {
+  content: ""; position: absolute; z-index: -1; left: -0.02em; right: 0; top: 0.08em; bottom: 0.04em;
+  background: var(--mark); transform: skewX(-8deg) rotate(-1.5deg); border-radius: 2px 6px 3px 7px;
+}
+.shell.collapsed .sidebar { padding-left: 10px; padding-right: 10px; }
+.shell.collapsed .brand { flex-direction: column; padding: 0 0 22px; gap: 14px; }
+.shell.collapsed .nav-link { justify-content: center; padding: 9px 0; }
+.shell.collapsed .nav-label, .shell.collapsed .source-text { display: none; }
+.shell.collapsed .nav-link.active::before { left: -10px; }
+.shell.collapsed .foot { padding: 0; justify-items: center; }
+.shell.collapsed .source { padding: 0; }
+.shell.collapsed .lang-switch { padding: 6px; }
 .nav-link {
   position: relative; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px;
   text-decoration: none; color: var(--ink-2); font-weight: 500; font-size: 14px; transition: background 0.15s, color 0.15s;
@@ -432,6 +453,7 @@ a[data-tip] { cursor: pointer; }
 .tooltip strong { font-weight: 600; }
 .tooltip span { opacity: 0.75; }
 .tooltip.bottom { animation-name: tip-in-below; }
+.tooltip.right { animation-name: tip-in-right; }
 
 /* ── Toasts ───────────────────────────────────────────────────────────── */
 .toasts { position: fixed; z-index: 50; right: 20px; bottom: 20px; display: grid; gap: 8px; }
@@ -451,6 +473,7 @@ a[data-tip] { cursor: pointer; }
 @keyframes pop { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
 @keyframes slide-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes tip-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+@keyframes tip-in-right { from { opacity: 0; transform: translateX(-3px); } to { opacity: 1; transform: none; } }
 @keyframes tip-in-below { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
 @keyframes shimmer { to { background-position: -200% 0; } }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -472,6 +495,8 @@ a[data-tip] { cursor: pointer; }
     padding: 6px; border-right: 0; border-top: 1px solid var(--grid); background: var(--surface);
   }
   .brand, .sidebar .foot { display: none; }
+  .shell.collapsed { grid-template-columns: 1fr; }
+  .shell.collapsed .nav-label { display: inline; }
   .nav-link { flex-direction: column; gap: 2px; font-size: 11px; padding: 6px 10px; }
   .nav-link.active::before { display: none; }
   main.content { padding: 20px 16px 96px; }
