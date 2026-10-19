@@ -16,7 +16,7 @@ blurring waiting, silence and rejection into one "it didn't work".
 ## Quickstart
 
 ```bash
-git clone https://github.com/<you>/vicversa && cd vicversa && pnpm install
+git clone https://github.com/RonyOz/vicversa && cd vicversa && pnpm install
 pnpm ui                       # the panel on a fictional demo profile → http://localhost:4747
 echo "VICVERSA_HOME=$HOME/my-cv" > .env && pnpm ui   # …then on your own data
 ```
@@ -137,3 +137,7 @@ pnpm brand                          # regenerate README images from the demo
 | `src/ui/` | The panel: JSON API and React app |
 | `examples/demo/` | A fictional data folder: the demo and the test fixture |
 | `ARCHITECTURE.md` | Design decisions and why |
+
+## License
+
+[MIT](LICENSE)

@@ -6,7 +6,13 @@
   "exports": {
     "./template": "./src/templates/kit.tsx"
   },
-  "description": "Single source of truth for CV data. Renders pixel-controlled one-page PDFs from a versioned YAML catalog.",
+  "description": "One catalog. Many one-page CVs. An honest tracker for where each one went.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RonyOz/vicversa.git"
+  },
+  "homepage": "https://github.com/RonyOz/vicversa#readme",
   "scripts": {
     "cv": "tsx --env-file-if-exists=.env src/cli.ts",
     "render": "tsx --env-file-if-exists=.env src/cli.ts render",
