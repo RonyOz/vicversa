@@ -1,9 +1,11 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/brand/wordmark-dark.png">
-  <img alt="vicversa" src="docs/brand/wordmark-light.png" height="72">
-</picture>
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/brand/wordmark-dark.png">
+    <img alt="vicversa" src="docs/brand/wordmark-light.png" height="72">
+  </picture>
+</p>
 
-**One catalog. Many one-page CVs. An honest tracker for where each one went.**
+<p align="center"><strong>One catalog. Many one-page CVs. An honest tracker for where each one went.</strong></p>
 
 Your career, under version control: everything you have done lives once, as
 YAML, and every CV you send is a selection from it — rendered in Chromium and
