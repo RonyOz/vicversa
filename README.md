@@ -7,7 +7,7 @@
 
 <p align="center"><strong>One catalog. Many one-page CVs. An honest tracker for where each one went.</strong></p>
 
-<!-- Showcase video: in the GitHub web editor, drag showcase.mp4 onto this line (it becomes a user-attachments link). -->
+https://github.com/user-attachments/assets/6825295b-b110-4aac-8c91-fe6210b560d6
 
 Your career, under version control: everything you have done lives once, as
 YAML, and every CV you send is a selection from it — rendered in Chromium and
