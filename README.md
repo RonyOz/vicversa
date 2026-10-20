@@ -7,13 +7,13 @@
 
 <p align="center"><strong>One catalog. Many one-page CVs. An honest tracker for where each one went.</strong></p>
 
+<!-- Showcase video: in the GitHub web editor, drag showcase.mp4 onto this line (it becomes a user-attachments link). -->
+
 Your career, under version control: everything you have done lives once, as
 YAML, and every CV you send is a selection from it — rendered in Chromium and
 guaranteed to fit on one page, or the build stops and tells you exactly what to
 cut. Then a local panel shows what happened to each application, without
 blurring waiting, silence and rejection into one "it didn't work".
-
-![The vicversa panel: response funnel, daily pace calendar and recent activity](docs/screenshots/summary-dark.png)
 
 ## Quickstart
 
@@ -27,6 +27,8 @@ Requires Node 24 and pnpm. Playwright's Chromium is installed with the
 dependencies; nothing leaves your machine.
 
 ## How it works
+
+![The vicversa panel: response funnel, daily pace calendar and recent activity](docs/screenshots/summary-dark.png)
 
 ```
 catalog/*.yaml  ──┐                                     ┌──> one-page PDF
