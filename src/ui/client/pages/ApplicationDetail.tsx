@@ -1,4 +1,4 @@
-import { ArrowLeft, ChevronRight, ExternalLink, FileText, RotateCcw, Undo2 } from "lucide-react";
+import { ArrowLeft, ChevronRight, ExternalLink, FileText, Undo2 } from "lucide-react";
 import { Link, useLocation, useParams } from "react-router";
 import type { TrackingEvent } from "../../../schema.js";
 import { daysBetween } from "../../../tracking.js";
@@ -110,8 +110,7 @@ export function ApplicationDetail() {
             </ol>
             {canUndo && last && (
               <button type="button" className="btn ghost" onClick={runUndo} disabled={undo.isPending}>
-                {summary?.state === "closed" ? <RotateCcw /> : <Undo2 />}
-                {summary?.state === "closed" ? t("detail.reopen", describe(last)) : t("detail.undo", describe(last))}
+                <Undo2 /> {t("detail.undo", describe(last))}
               </button>
             )}
           </section>
@@ -120,6 +119,18 @@ export function ApplicationDetail() {
             <section className="card">
               <h2>{t("detail.record")}</h2>
               <EventForm key={name} name={name} events={events} today={today} />
+            </section>
+          )}
+
+          {summary?.state === "closed" && (
+            <section className="card">
+              <details className="fold">
+                <summary>
+                  <ChevronRight /> {t("detail.reopenProcess")}
+                </summary>
+                <p className="lede">{t("detail.reopenLede")}</p>
+                <EventForm key={name} name={name} events={events} today={today} choices={["reopened"]} />
+              </details>
             </section>
           )}
 

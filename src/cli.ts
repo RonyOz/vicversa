@@ -137,7 +137,8 @@ const USAGE = `vicversa - one catalog, many CVs
   cv status [application] [--stale-days N] [--weeks W]
   cv track <application> <stage> [--date YYYY-MM-DD] [--note TEXT]
 
-  stages: applied, assessment, interview, offer, hired, rejected, withdrawn
+  stages: applied, assessment, interview, offer, hired, rejected, withdrawn,
+          interaction (any contact: postponed, follow-up), reopened (only right after a closing event)
 `;
 
 async function main() {

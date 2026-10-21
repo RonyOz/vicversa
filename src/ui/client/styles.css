@@ -228,6 +228,7 @@ main.content { padding: 30px 36px 80px; width: 100%; min-width: 0; }
 .st-assessment, .st-interview, .st-offer, .st-hired { background: color-mix(in srgb, var(--advanced) 18%, transparent); color: var(--advanced); }
 .st-rejected { background: color-mix(in srgb, var(--rejected) 18%, transparent); color: var(--rejected); }
 .st-withdrawn { background: color-mix(in srgb, var(--withdrawn) 18%, transparent); color: var(--withdrawn); }
+.st-interaction, .st-reopened { background: var(--surface-2); color: var(--muted); }
 .badge { display: inline-flex; align-items: center; gap: 6px; font-family: Montserrat, sans-serif; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; letter-spacing: 0; }
 .badge.active { background: var(--waiting-soft); color: var(--waiting); }
 .badge.stale { background: var(--surface-2); color: var(--ink-2); }

@@ -63,11 +63,16 @@ not obvious from the code, and why they were made.
 ## Tracking
 
 - An application's history is a list of events (`applied`, `assessment`,
-  `interview`, `offer`, `hired`, `rejected`, `withdrawn`); state is never
-  stored, it is derived. Without `tracking`, `metadata.date_submitted` stands
+  `interview`, `offer`, `hired`, `rejected`, `withdrawn`, plus `interaction`
+  and `reopened`); state is never stored, it is derived. Without `tracking`, `metadata.date_submitted` stands
   for one `applied` event; with neither, the file is a template or draft.
-- Rules: dates in order, nothing after a terminal stage. Events are inserted in
-  date order (logging late is the common case) and future dates are refused.
+- Rules: dates in order, nothing after a terminal stage except `reopened`,
+  which is only valid right there: a company that comes back reopens the same
+  process and the closing event stays in the history. `interaction` is any
+  contact that is not progress (a postponed interview, a follow-up); it keeps
+  a process from looking silent but is never counted as a company response.
+  Events are inserted in date order (logging late is the common case) and
+  future dates are refused.
 - **Edits never re-serialize YAML.** `yaml`'s `Document.toString()` refolds
   block scalars and reflows lists in every file, so recording an event splices
   one line in at an offset taken from the parsed node ranges, and undo splices
@@ -75,7 +80,8 @@ not obvious from the code, and why they were made.
   Writes to a file are serialized so two parallel requests cannot drop one.
 - The **funnel** puts every application in exactly one bucket — waiting,
   silent, withdrawn before an answer, rejected outright, advanced — so waiting
-  and silence are never counted as rejection. Percentages always show their
+  and silence are never counted as rejection. Reach counts over the whole
+  history; a rejection counts only while it has not been reopened. Percentages always show their
   denominators; there are no market averages to compare against.
 
 ## One core, three interfaces

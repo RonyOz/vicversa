@@ -1,6 +1,6 @@
 ---
 name: cv-tracker
-description: Use when the user reports news about a job application or asks how their applications are going, in the vicversa repo. Triggers: "me rechazaron de X", "decidimos continuar con otros candidatos", "tuve entrevista / prueba con Y", "me llegó una prueba técnica", "me ofrecieron", "acepté la oferta", "me retiré de", "¿cómo van mis convocatorias?", "¿cómo voy aplicando?", "application status", "I got rejected", "I had an interview".
+description: Use when the user reports news about a job application or asks how their applications are going, in the vicversa repo. Triggers: "me rechazaron de X", "decidimos continuar con otros candidatos", "tuve entrevista / prueba con Y", "me llegó una prueba técnica", "me ofrecieron", "acepté la oferta", "me retiré de", "me aplazaron la entrevista", "me volvieron a contactar", "¿cómo van mis convocatorias?", "¿cómo voy aplicando?", "application status", "I got rejected", "I had an interview".
 ---
 
 # cv-tracker
@@ -24,6 +24,14 @@ If the MCP tools are not available in this client, use the CLI equivalents:
 | "acepté", "me contrataron" | `hired` |
 | "me rechazaron", "continuar con otros candidatos", "no seguimos" | `rejected` |
 | "me retiré", "rechacé la oferta", "ya no me interesa" | `withdrawn` |
+| "aplacé / me aplazaron", "fecha por confirmar", "les escribí", "me escribió el recruiter" | `interaction` |
+| after a closing event: "me volvieron a contactar", "me ofrecieron otra área" (same process, same CV) | `reopened` |
+
+`interaction` is any real contact that is not progress. It is not a stage of
+the funnel and not a company response; it only shows the process is alive.
+`reopened` is valid only right after `rejected`/`withdrawn`/`hired`. The
+closing event stays in the history, so never undo a rejection to reopen. If
+a rejected process comes back, record `reopened`, then any new stage.
 
 Only events that already happened are recorded. A scheduled future interview
 is not an event yet: say so and offer to record it when it happens.
@@ -42,12 +50,13 @@ is not an event yet: say so and offer to record it when it happens.
 
 ## Fixing a mistake
 
-"La cerré por error", "no era rechazo", wrong date or stage: call
+"La cerré por error", "no era rechazo" (a mistake, not a company that came
+back: that is `reopened`), wrong date or stage: call
 `undo_last_event` with the application name. It removes only the **last**
 recorded event (the first `applied` is never removed); tell the user which
 event will go before calling. To fix it, undo and then `track` the right
 event. Older events than the last one: undo repeatedly, then re-record.
-The panel (`pnpm ui`) offers the same as "reabrir" / "deshacer".
+The panel (`pnpm ui`) offers the same as "deshacer".
 
 ## Reporting status
 

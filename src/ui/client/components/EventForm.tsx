@@ -8,17 +8,20 @@ import { NOTE_SUGGESTIONS, STAGE_ICONS, STAGE_KEYS } from "../labels.js";
 import { useToast } from "../toast.js";
 import { DatePicker } from "./DatePicker.js";
 
-const CHOICES: Stage[] = ["assessment", "interview", "offer", "hired", "rejected", "withdrawn"];
+const CHOICES: Stage[] = ["assessment", "interview", "offer", "hired", "rejected", "withdrawn", "interaction"];
 
 /**
  * Records what happened in one application: stage as buttons, a date picker
  * that marks this application's events and offers its last event as a
  * shortcut, note suggestions per stage. After saving, the toast offers undo.
+ * With a single choice (reopening a closed process) the stage picker is hidden.
  */
-export function EventForm({ name, events, today }: { name: string; events: readonly TrackingEvent[]; today: string }) {
+export function EventForm({
+  name, events, today, choices = CHOICES,
+}: { name: string; events: readonly TrackingEvent[]; today: string; choices?: Stage[] }) {
   const { t, lang } = useI18n();
   const last = events.at(-1) ?? null;
-  const [stage, setStage] = useState<Stage>("interview");
+  const [stage, setStage] = useState<Stage>(choices.includes("interview") ? "interview" : choices[0]!);
   const [date, setDate] = useState(today);
   const [note, setNote] = useState("");
   const track = useTrack();
@@ -47,29 +50,31 @@ export function EventForm({ name, events, today }: { name: string; events: reado
 
   return (
     <form onSubmit={submit}>
-      <div className="field">
-        <span className="label">{t("form.what")}</span>
-        <div className="stage-picker" role="radiogroup" aria-label={t("form.what")}>
-          {CHOICES.map((choice) => {
-            const Icon = STAGE_ICONS[choice];
-            return (
-              <button
-                type="button"
-                key={choice}
-                role="radio"
-                aria-checked={stage === choice}
-                className={`stage-option${stage === choice ? " on" : ""}`}
-                onClick={() => setStage(choice)}
-              >
-                <span className={`stage-icon st-${choice}`}>
-                  <Icon />
-                </span>
-                {t(STAGE_KEYS[choice])}
-              </button>
-            );
-          })}
+      {choices.length > 1 && (
+        <div className="field">
+          <span className="label">{t("form.what")}</span>
+          <div className="stage-picker" role="radiogroup" aria-label={t("form.what")}>
+            {choices.map((choice) => {
+              const Icon = STAGE_ICONS[choice];
+              return (
+                <button
+                  type="button"
+                  key={choice}
+                  role="radio"
+                  aria-checked={stage === choice}
+                  className={`stage-option${stage === choice ? " on" : ""}`}
+                  onClick={() => setStage(choice)}
+                >
+                  <span className={`stage-icon st-${choice}`}>
+                    <Icon />
+                  </span>
+                  {t(STAGE_KEYS[choice])}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="field">
         <span className="label">{t("form.when")}</span>

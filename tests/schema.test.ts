@@ -36,7 +36,7 @@ test("rejects anything after a terminal stage", () => {
     { date: "2026-10-02", stage: "rejected" },
     { date: "2026-10-03", stage: "interview" },
   ]);
-  assert.match(String(messages(result)), /terminal stage: rejected on 2026-10-02/);
+  assert.match(String(messages(result)), /terminal stage: interview on 2026-10-03 comes after rejected on 2026-10-02/);
 });
 
 test("rejects an empty list, a bad date and an unknown stage", () => {

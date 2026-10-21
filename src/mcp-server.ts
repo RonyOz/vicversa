@@ -284,7 +284,10 @@ export function createServer(): McpServer {
       description:
         "Records something that already happened in an application's process. Stages: applied, assessment " +
         "(any test), interview (any interview), offer, hired, rejected, withdrawn (candidate withdrew or " +
-        "declined). Date defaults to today and cannot be in the future; late events are inserted in date order.",
+        "declined), interaction (any other contact from either side: a postponed interview, a follow-up; not a " +
+        "stage of the funnel), reopened (only right after rejected/withdrawn/hired, when the same process comes " +
+        "back; the closing event stays). Date defaults to today and cannot be in the future; late events are " +
+        "inserted in date order.",
       inputSchema: {
         name: z.string(),
         stage: Stage,

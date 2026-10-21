@@ -86,5 +86,26 @@ test("insertEvent allows before a terminal, refuses on or after it", () => {
 
 test("insertEvent refuses a terminal that would not be last", () => {
   const base = [ev("2026-10-01", "applied"), ev("2026-10-10", "interview")];
-  assert.throws(() => insertEvent(base, ev("2026-10-05", "rejected"), "2026-10-20"), /nothing can follow a terminal stage/);
+  assert.throws(() => insertEvent(base, ev("2026-10-05", "rejected"), "2026-10-20"), /nothing but reopened can follow a terminal stage/);
+});
+
+test("summarize: interactions keep the stage, reopened makes it active again", () => {
+  const postponed = app({ tracking: [ev("2026-10-01", "applied"), ev("2026-10-05", "interview"), ev("2026-10-15", "interaction", "Postponed")] });
+  const summary = summarize("p", postponed, "2026-10-20", 21);
+  assert.equal(summary?.stage, "interview");
+  assert.equal(summary?.daysSince, 5);
+  const reopened = app({ tracking: [ev("2026-09-01", "applied"), ev("2026-09-05", "rejected"), ev("2026-10-15", "reopened")] });
+  assert.deepEqual([summarize("r", reopened, "2026-10-20", 21)?.state, summarize("r", reopened, "2026-10-20", 21)?.stage], ["active", "reopened"]);
+});
+
+test("insertEvent: only reopened may follow a terminal, and only right after one", () => {
+  const closed = [ev("2026-10-01", "applied"), ev("2026-10-10", "rejected")];
+  const reopened = insertEvent(closed, ev("2026-10-15", "reopened"), "2026-10-20").events;
+  assert.equal(insertEvent(reopened, ev("2026-10-18", "interview"), "2026-10-20").index, 3);
+  assert.throws(() => insertEvent(closed, ev("2026-10-15", "interaction"), "2026-10-20"), /already closed/);
+  assert.throws(
+    () => insertEvent([ev("2026-10-01", "applied")], ev("2026-10-05", "reopened"), "2026-10-20"),
+    /must come right after a terminal stage/,
+  );
+  assert.throws(() => insertEvent(reopened, ev("2026-10-12", "interview"), "2026-10-20"), /nothing but reopened/);
 });

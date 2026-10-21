@@ -59,3 +59,24 @@ test("funnel puts each application in exactly one bucket", () => {
   assert.equal(f.resolved, 6);
   assert.equal(f.waiting + f.silent + f.withdrawnSilent + f.responded, f.total);
 });
+
+test("funnel: interactions are not responses, reopened processes count by where they are now", () => {
+  const today = "2026-10-30";
+  const f = funnel(
+    [
+      [ev("2026-10-01", "applied"), ev("2026-10-25", "interaction")], // waiting: the interaction resets the clock
+      // Reopened after reaching interview: still counts the reach, ongoing.
+      [ev("2026-09-01", "applied"), ev("2026-09-05", "interview"), ev("2026-09-10", "rejected"), ev("2026-10-20", "reopened")],
+      // Reopened after a direct rejection: waiting again, not a rejection.
+      [ev("2026-09-01", "applied"), ev("2026-09-05", "rejected"), ev("2026-10-20", "reopened")],
+      // Rejected again after reopening: a direct rejection once more.
+      [ev("2026-09-01", "applied"), ev("2026-09-05", "rejected"), ev("2026-09-20", "reopened"), ev("2026-09-25", "rejected")],
+    ],
+    today,
+    21,
+  );
+  assert.equal(f.waiting, 2);
+  assert.equal(f.advanced.interview.ongoing, 1);
+  assert.equal(f.rejectedDirect, 1);
+  assert.equal(f.waiting + f.silent + f.withdrawnSilent + f.responded, f.total);
+});

@@ -51,7 +51,7 @@ export interface TrackSummary {
   company?: string;
   role?: string;
   state: State;
-  /** Stage of the last event. */
+  /** Stage of the last event, skipping interactions: they are contact, not progress. */
   stage: Stage;
   counts: Partial<Record<Stage, number>>;
   lastDate: string;
@@ -66,9 +66,10 @@ export function summarize(name: string, app: Application, today: string, staleDa
   for (const event of events) counts[event.stage] = (counts[event.stage] ?? 0) + 1;
   const daysSince = daysBetween(last.date, today);
   const state: State = isTerminal(last.stage) ? "closed" : daysSince >= staleDays ? "stale" : "active";
+  const stage = events.findLast((event) => event.stage !== "interaction")?.stage ?? last.stage;
   return {
     name, company: app.metadata.company, role: app.metadata.role,
-    state, stage: last.stage, counts, lastDate: last.date, daysSince,
+    state, stage, counts, lastDate: last.date, daysSince,
   };
 }
 
@@ -87,7 +88,7 @@ export function insertEvent(
     throw new Error(`${event.date} is in the future (today is ${today}). Only events that already happened are recorded.`);
   }
   const last = events.at(-1);
-  if (last && isTerminal(last.stage) && event.date >= last.date) {
+  if (last && isTerminal(last.stage) && event.date >= last.date && event.stage !== "reopened") {
     throw new Error(`This application is already closed: ${last.stage} on ${last.date}.`);
   }
   let index = events.length;
@@ -170,18 +171,15 @@ export function funnel(timelines: readonly (readonly TrackingEvent[])[], today: 
   for (const events of timelines) {
     const last = events.at(-1);
     if (!last) continue;
-    const fromCompany = events.filter((event) => COMPANY_STAGES.includes(event.stage));
+    // Reach counts over the whole history; a rejection only while it is not reopened.
+    const furthest = Math.max(-1, ...events.map((event) => REACH.indexOf(event.stage as Reach)));
 
-    if (fromCompany.length === 0) {
-      if (last.stage === "withdrawn") result.withdrawnSilent++;
+    if (furthest === -1) {
+      const current = events.slice(events.findLastIndex((event) => event.stage === "reopened") + 1);
+      if (current.some((event) => COMPANY_STAGES.includes(event.stage))) result.rejectedDirect++;
+      else if (last.stage === "withdrawn") result.withdrawnSilent++;
       else if (daysBetween(last.date, today) >= staleDays) result.silent++;
       else result.waiting++;
-      continue;
-    }
-
-    const furthest = Math.max(...fromCompany.map((event) => REACH.indexOf(event.stage as Reach)));
-    if (furthest === -1) {
-      result.rejectedDirect++;
       continue;
     }
     const outcome: Outcome =

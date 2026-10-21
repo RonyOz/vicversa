@@ -153,13 +153,18 @@ export const IsoDate = z
     return !Number.isNaN(time) && new Date(time).toISOString().startsWith(date);
   }, "not a real calendar date");
 
-export const STAGES = ["applied", "assessment", "interview", "offer", "hired", "rejected", "withdrawn"] as const;
+export const STAGES = [
+  "applied", "assessment", "interview", "offer", "hired", "rejected", "withdrawn", "interaction", "reopened",
+] as const;
 export type Stage = (typeof STAGES)[number];
 
-/** A process is over once one of these is recorded, so it must be the last event. */
+/** A process is over once one of these is recorded: only "reopened" may follow it. */
 export const TERMINAL_STAGES: readonly Stage[] = ["hired", "rejected", "withdrawn"];
 
-/** Events only the company can cause: any of them means the application got a response. */
+/**
+ * Events only the company can cause: any of them means the application got a
+ * response. "interaction" is not one: either side can start it.
+ */
 export const COMPANY_STAGES: readonly Stage[] = ["assessment", "interview", "offer", "hired", "rejected"];
 
 export const TrackingEvent = z.object({
@@ -170,7 +175,7 @@ export const TrackingEvent = z.object({
 export type TrackingEvent = z.infer<typeof TrackingEvent>;
 
 /**
- * The two rules every timeline satisfies. Returned as a message instead of
+ * The rules every timeline satisfies. Returned as a message instead of
  * thrown so the schema and `cv track` report a broken timeline the same way.
  */
 export function trackingProblem(events: readonly TrackingEvent[]): string | null {
@@ -181,10 +186,16 @@ export function trackingProblem(events: readonly TrackingEvent[]): string | null
       return `events must be in date order: ${current.date} (${current.stage}) comes after ${previous.date} (${previous.stage})`;
     }
   }
-  const terminal = events.findIndex((event) => TERMINAL_STAGES.includes(event.stage));
-  if (terminal !== -1 && terminal !== events.length - 1) {
-    const event = events[terminal]!;
-    return `nothing can follow a terminal stage: ${event.stage} on ${event.date} is not the last event`;
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i]!;
+    const next = events[i + 1];
+    if (TERMINAL_STAGES.includes(event.stage) && next && next.stage !== "reopened") {
+      return `nothing but reopened can follow a terminal stage: ${next.stage} on ${next.date} comes after ${event.stage} on ${event.date}`;
+    }
+    const previous = events[i - 1];
+    if (event.stage === "reopened" && !(previous && TERMINAL_STAGES.includes(previous.stage))) {
+      return `reopened on ${event.date} must come right after a terminal stage`;
+    }
   }
   return null;
 }
