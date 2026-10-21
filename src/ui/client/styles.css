@@ -223,12 +223,11 @@ main.content { padding: 30px 36px 80px; width: 100%; min-width: 0; }
 /* ── Stage icons & badges ─────────────────────────────────────────────── */
 .stage-icon { width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
 .stage-icon svg { width: 15px; height: 15px; }
-.st-applied { background: var(--surface-2); color: var(--ink-2); }
+.st-applied, .st-interaction, .st-reopened { background: var(--surface-2); color: var(--ink-2); }
 .st-waiting { border: 1px dashed var(--axis); }
 .st-assessment, .st-interview, .st-offer, .st-hired { background: color-mix(in srgb, var(--advanced) 18%, transparent); color: var(--advanced); }
 .st-rejected { background: color-mix(in srgb, var(--rejected) 18%, transparent); color: var(--rejected); }
 .st-withdrawn { background: color-mix(in srgb, var(--withdrawn) 18%, transparent); color: var(--withdrawn); }
-.st-interaction, .st-reopened { background: var(--surface-2); color: var(--muted); }
 .badge { display: inline-flex; align-items: center; gap: 6px; font-family: Montserrat, sans-serif; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; letter-spacing: 0; }
 .badge.active { background: var(--waiting-soft); color: var(--waiting); }
 .badge.stale { background: var(--surface-2); color: var(--ink-2); }
@@ -302,7 +301,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--m
 .mark { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
 .track .mark { position: absolute; top: 5px; margin-left: -6px; box-shadow: 0 0 0 2px var(--surface); }
 .row:hover .track .mark { box-shadow: 0 0 0 2px var(--surface-2); }
-.mark.applied { background: var(--surface); border: 2px solid var(--ink-2); }
+.mark.applied, .mark.interaction, .mark.reopened { background: var(--surface); border: 2px solid var(--ink-2); }
 .mark.assessment, .mark.interview, .mark.offer, .mark.hired { background: var(--advanced); }
 .mark.rejected { background: var(--rejected); }
 .mark.withdrawn { background: var(--withdrawn); }
