@@ -1,7 +1,9 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router";
 import type { Dashboard } from "../../../ops.js";
 import type { TrackingEvent } from "../../../schema.js";
-import { calendarGrid, calendarLevel, funnelSegments, type SegmentKey, type TimeAxis } from "../../layout.js";
+import { calendarGrid, calendarLevel, calendarPages, funnelSegments, type SegmentKey, type TimeAxis } from "../../layout.js";
 import { monthNames, shortDate, weekdayNames } from "../dates.js";
 import { useI18n, type MessageKey } from "../i18n.js";
 import { STAGE_KEYS } from "../labels.js";
@@ -96,57 +98,93 @@ export function FunnelCard({ data }: { data: Dashboard }) {
   );
 }
 
+/**
+ * Opens on the current weeks; the arrows page back a whole window at a time,
+ * on purpose only. The KPI above keeps measuring the current window.
+ */
 export function PaceCard({ data }: { data: Dashboard }) {
   const { t, lang } = useI18n();
-  const grid = calendarGrid(data.rows.map((r) => r.events), data.today, data.pace.weeks.length, monthNames(lang, "short"));
+  const [view, setView] = useState({ page: 0, enter: "" });
+  const timelines = data.rows.map((r) => r.events);
+  const size = data.pace.weeks.length;
+  const pages = calendarPages(timelines, data.today, size);
+  const page = Math.min(view.page, pages);
+  const grid = calendarGrid(timelines, data.today, size, monthNames(lang, "short"), page * size);
   const weekdays = weekdayNames(lang);
+  const go = (next: number) => setView({ page: next, enter: next > page ? "enter-older" : "enter-newer" });
+  const first = grid.weeks[0]!.days[0]!.date;
+  const last = grid.weeks.at(-1)!.days[6]!.date;
+  const total = grid.weeks.reduce((sum, w) => sum + w.total, 0);
   return (
     <section className="card">
-      <h2>{t("pace.title")}</h2>
-      <p className="lede">{t("pace.lede", data.pace.average.toFixed(1))}</p>
+      <div className="card-head">
+        <h2>{t("pace.title")}</h2>
+        {pages > 0 && (
+          <div className="pager">
+            {page > 0 && (
+              <button type="button" className="btn ghost sm" onClick={() => go(0)}>
+                {t("pace.now")}
+              </button>
+            )}
+            <button type="button" className="btn ghost icon" onClick={() => go(page + 1)} disabled={page >= pages} aria-label={t("pace.older")} data-tip={t("pace.older")}>
+              <ChevronLeft />
+            </button>
+            <button type="button" className="btn ghost icon" onClick={() => go(page - 1)} disabled={page === 0} aria-label={t("pace.newer")} data-tip={t("pace.newer")}>
+              <ChevronRight />
+            </button>
+          </div>
+        )}
+      </div>
+      <p className="lede">
+        {page === 0
+          ? t("pace.lede", data.pace.average.toFixed(1))
+          : t("pace.ledeRange", (total / size).toFixed(1), shortDate(first, lang), shortDate(last, lang))}
+      </p>
       <div className="cal-wrap">
-        <table className="cal">
-          <colgroup><col className="days" /></colgroup>
-          <thead>
-            <tr className="months">
-              <th />
-              {grid.weeks.map((w) => <th key={w.start}>{w.month ?? ""}</th>)}
-            </tr>
-            <tr>
-              <th />
-              {grid.weeks.map((w) => <th key={w.start} className="num">{w.range}</th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {weekdays.map((weekday, d) => (
-              <tr key={weekday}>
-                <th scope="row">{weekday}</th>
-                {grid.weeks.map((w) => {
-                  const day = w.days[d]!;
-                  const when = `${weekday} ${shortDate(day.date, lang)}`;
-                  const what = day.future ? t("pace.future") : t("pace.count", day.count);
-                  return (
-                    <td key={day.date}>
-                      <span
-                        className={`cell l${calendarLevel(day.count)}${day.today ? " today" : ""}${day.future ? " future" : ""}`}
-                        data-tip={`${when}${day.today ? `, ${t("pace.today")}` : ""}\n${what}`}
-                        aria-label={`${when}: ${what}`}
-                      >
-                        {day.count > 0 ? day.count : ""}
-                      </span>
-                    </td>
-                  );
-                })}
+        <div className="cal-clip">
+          <table className={`cal ${view.enter}`} key={page}>
+            <colgroup><col className="days" /></colgroup>
+            <thead>
+              <tr className="months">
+                <th />
+                {grid.weeks.map((w) => <th key={w.start}>{w.month ?? ""}</th>)}
               </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <th scope="row">{t("pace.total")}</th>
-              {grid.weeks.map((w) => <td key={w.start} className="num">{w.total}</td>)}
-            </tr>
-          </tfoot>
-        </table>
+              <tr>
+                <th />
+                {grid.weeks.map((w) => <th key={w.start} className="num">{w.range}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {weekdays.map((weekday, d) => (
+                <tr key={weekday}>
+                  <th scope="row">{weekday}</th>
+                  {grid.weeks.map((w) => {
+                    const day = w.days[d]!;
+                    const when = `${weekday} ${shortDate(day.date, lang)}`;
+                    const what = day.future ? t("pace.future") : t("pace.count", day.count);
+                    return (
+                      <td key={day.date}>
+                        <span
+                          className={`cell l${calendarLevel(day.count)}${day.today ? " today" : ""}${day.future ? " future" : ""}`}
+                          data-tip={`${when}${day.today ? `, ${t("pace.today")}` : ""}\n${what}`}
+                          aria-label={`${when}: ${what}`}
+                        >
+                          {day.count > 0 ? day.count : ""}
+                        </span>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th scope="row">{t("pace.total")}</th>
+                {grid.weeks.map((w) => <td key={w.start} className="num">{w.total}</td>)}
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       </div>
       <div className="cal-legend">
         {t("pace.less")} {[0, 1, 2, 3, 4].map((l) => <span key={l} className={`cell l${l}`} />)} {t("pace.more")}

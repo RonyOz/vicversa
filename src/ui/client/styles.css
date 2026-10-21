@@ -159,6 +159,8 @@ main.content { padding: 30px 36px 80px; width: 100%; min-width: 0; }
 .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--grid); padding: 20px; }
 .card h2 { font-size: 15px; font-weight: 600; margin: 0; }
 .card .lede { color: var(--ink-2); font-size: 13px; margin: 2px 0 16px; max-width: 72ch; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 28px; }
+.pager { display: flex; align-items: center; gap: 2px; }
 .grid-2 { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; align-items: start; }
 
 /* ── KPIs, funnel, calendar ───────────────────────────────────────────── */
@@ -191,6 +193,10 @@ main.content { padding: 30px 36px 80px; width: 100%; min-width: 0; }
 .note { margin: 12px 0 0; font-size: 13px; color: var(--ink-2); }
 
 .cal-wrap { overflow-x: auto; direction: rtl; } /* starts scrolled at the newest weeks */
+/* Clips the paging slide without becoming a scroll container (the weekday column stays sticky). */
+.cal-clip { overflow: clip; min-width: 320px; }
+.cal.enter-older :is(td, th:not(:first-child)) { animation: cal-older 0.24s var(--ease) both; }
+.cal.enter-newer :is(td, th:not(:first-child)) { animation: cal-newer 0.24s var(--ease) both; }
 .cal { direction: ltr; border-collapse: separate; border-spacing: 4px; width: 100%; table-layout: fixed; min-width: 320px; }
 .cal col.days { width: 40px; }
 .cal tr > th:first-child { position: sticky; left: 0; z-index: 1; background: var(--surface); }
@@ -277,6 +283,9 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--m
 .btn.ghost { border-color: transparent; color: var(--ink-2); }
 .btn.ghost:hover { background: var(--surface-2); color: var(--ink); }
 .btn:disabled { opacity: 0.5; cursor: default; }
+.btn.ghost:disabled:hover { background: transparent; color: var(--ink-2); }
+.btn.sm { padding: 4px 9px; font-size: 12px; }
+.btn.icon { padding: 5px; }
 
 /* ── Tracker list ─────────────────────────────────────────────────────── */
 .result-count { font-size: 12px; color: var(--muted); margin: 0 0 8px 2px; }
@@ -475,6 +484,8 @@ a[data-tip] { cursor: pointer; }
 @keyframes tip-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 @keyframes tip-in-right { from { opacity: 0; transform: translateX(-3px); } to { opacity: 1; transform: none; } }
 @keyframes tip-in-below { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+@keyframes cal-older { from { opacity: 0.2; transform: translateX(-16px); } to { opacity: 1; transform: none; } }
+@keyframes cal-newer { from { opacity: 0.2; transform: translateX(16px); } to { opacity: 1; transform: none; } }
 @keyframes shimmer { to { background-position: -200% 0; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.16s; }

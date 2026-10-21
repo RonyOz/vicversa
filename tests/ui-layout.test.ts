@@ -73,3 +73,20 @@ test("calendarLevel buckets counts into 0–4", async () => {
   const { calendarLevel } = await import("../src/ui/layout.js");
   assert.deepEqual([0, 1, 2, 3, 4, 5, 9].map(calendarLevel), [0, 1, 2, 3, 3, 4, 4]);
 });
+
+test("calendarGrid: offset shows earlier weeks, today stays today", async () => {
+  const { calendarGrid } = await import("../src/ui/layout.js");
+  const grid = calendarGrid([[ev("2026-09-22", "applied")]], "2026-10-14", 2, undefined, 4);
+  assert.deepEqual(grid.weeks.map((w) => w.start), ["2026-09-07", "2026-09-14"]);
+  assert.equal(grid.weeks.some((w) => w.days.some((d) => d.today || d.future)), false);
+});
+
+test("calendarPages: how many windows back reach the first application", async () => {
+  const { calendarPages } = await import("../src/ui/layout.js");
+  const today = "2026-10-14"; // week of 12 oct
+  assert.equal(calendarPages([], today, 8), 0);
+  assert.equal(calendarPages([[ev("2026-08-24", "applied")]], today, 8), 0); // 7 weeks back: on screen
+  assert.equal(calendarPages([[ev("2026-08-17", "applied")]], today, 8), 1); // 8 weeks back
+  assert.equal(calendarPages([[ev("2026-06-29", "applied")], [ev("2026-10-01", "applied")]], today, 8), 1); // 15 back
+  assert.equal(calendarPages([[ev("2026-06-22", "applied")]], today, 8), 2); // 16 back
+});

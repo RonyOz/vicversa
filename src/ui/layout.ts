@@ -98,12 +98,14 @@ export interface CalendarWeek {
 /**
  * "applied" events laid out as a calendar: one column per week (Monday
  * first), one cell per day, so every count sits on a findable date.
+ * `offset` moves the window that many weeks into the past.
  */
 export function calendarGrid(
   timelines: readonly (readonly TrackingEvent[])[],
   today: string,
   weeks: number,
   months: readonly string[] = MONTHS,
+  offset = 0,
 ): { weeks: CalendarWeek[]; max: number } {
   const counts = new Map<string, number>();
   for (const events of timelines) {
@@ -111,7 +113,7 @@ export function calendarGrid(
       if (event.stage === "applied") counts.set(event.date, (counts.get(event.date) ?? 0) + 1);
     }
   }
-  const firstMonday = addDays(weekStart(today), -7 * (weeks - 1));
+  const firstMonday = addDays(weekStart(today), -7 * (weeks - 1 + offset));
   const result: CalendarWeek[] = [];
   for (let w = 0; w < weeks; w++) {
     const start = addDays(firstMonday, 7 * w);
@@ -132,6 +134,15 @@ export function calendarGrid(
   }
   const max = Math.max(0, ...result.flatMap((week) => week.days.map((day) => day.count)));
   return { weeks: result, max };
+}
+
+/** Windows of `weeks` before the current one that still hold an "applied" event's week. */
+export function calendarPages(timelines: readonly (readonly TrackingEvent[])[], today: string, weeks: number): number {
+  const applied = timelines.flatMap((events) => events.filter((e) => e.stage === "applied").map((e) => e.date));
+  if (applied.length === 0) return 0;
+  const first = applied.reduce((a, b) => (a < b ? a : b));
+  const back = daysBetween(weekStart(first), weekStart(today)) / 7;
+  return Math.max(0, Math.ceil((back - (weeks - 1)) / weeks));
 }
 
 /** Intensity step for a day's count: 0 none, 1, 2, 3–4, 5+. */
