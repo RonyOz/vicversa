@@ -90,6 +90,7 @@ const en = {
   "apps.applied": (date: string) => `applied ${date}`,
   "apps.idle": (days: number) => `${days}d without movement`,
   "axis.today": "today",
+  "axis.earlier": (n: number, date: string) => `${n} earlier ${s(n, "event", "events")}, since ${date}`,
 
   "detail.back": "Applications",
   "detail.posting": "View posting",
@@ -268,6 +269,7 @@ const es: Messages = {
   "apps.applied": (date) => `aplicada ${date}`,
   "apps.idle": (days) => `${days}d sin movimiento`,
   "axis.today": "hoy",
+  "axis.earlier": (n, date) => `${n} ${s(n, "evento anterior", "eventos anteriores")}, desde ${date}`,
 
   "detail.back": "Convocatorias",
   "detail.posting": "Ver convocatoria",

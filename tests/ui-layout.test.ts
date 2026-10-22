@@ -31,6 +31,22 @@ test("timeAxis maps dates linearly and gives month ticks", () => {
   assert.deepEqual(axis.ticks.map((t) => t.label), ["sep", "oct"]);
 });
 
+test("cycleStart: the last reopening, else the first event", async () => {
+  const { cycleStart } = await import("../src/ui/layout.js");
+  assert.equal(cycleStart([ev("2026-09-14", "applied"), ev("2026-09-20", "interview")]), "2026-09-14");
+  assert.equal(
+    cycleStart([
+      ev("2026-06-02", "applied"),
+      ev("2026-06-20", "rejected"),
+      ev("2026-07-01", "reopened"),
+      ev("2026-07-10", "withdrawn"),
+      ev("2026-09-08", "reopened"),
+      ev("2026-09-15", "interview"),
+    ]),
+    "2026-09-08",
+  );
+});
+
 test("timelineGroups: active, then no response, then closed; most recent movement first", () => {
   const groups = timelineGroups(
     [

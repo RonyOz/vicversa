@@ -60,6 +60,11 @@ export function timeAxis(start: string, end: string, width: number, months: read
   return { x, ticks };
 }
 
+/** Where the current process began: the last reopening, else the first event. Events are date-ordered. */
+export function cycleStart(events: readonly TrackingEvent[]): string {
+  return (events.findLast((event) => event.stage === "reopened") ?? events[0]!).date;
+}
+
 const GROUP_ORDER: State[] = ["active", "stale", "closed"];
 
 /** Rows grouped by state (active, no response, closed), most recently moved first. */

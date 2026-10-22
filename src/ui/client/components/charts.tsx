@@ -193,17 +193,27 @@ export function PaceCard({ data }: { data: Dashboard }) {
   );
 }
 
-/** One application on the shared time axis; the dotted line is the wait until today. */
+/**
+ * One application on the shared time axis; the dotted line is the wait until today.
+ * Events before the axis starts (an earlier cycle) fold into a chevron at the left edge.
+ */
 export function TimelineTrack({ events, open, axis }: { events: readonly TrackingEvent[]; open: boolean; axis: TimeAxis }) {
   const { t, lang } = useI18n();
-  const start = axis.x(events[0]!.date);
-  const end = axis.x(events.at(-1)!.date);
+  const earlier = events.filter((e) => axis.x(e.date) < 0);
+  const shown = events.slice(earlier.length);
+  const start = axis.x(shown[0]!.date);
+  const end = axis.x(shown.at(-1)!.date);
   return (
     <div className="track" aria-hidden>
       {axis.ticks.map((tick) => <i className="gridline" key={tick.date} style={{ left: `${tick.x}%` }} />)}
+      {earlier.length > 0 && (
+        <i className="clipped" data-tip={t("axis.earlier", earlier.length, shortDate(earlier[0]!.date, lang))}>
+          <ChevronLeft size={12} />
+        </i>
+      )}
       {end > start && <i className="span" style={{ left: `${start}%`, width: `${end - start}%` }} />}
       {open && <i className="wait" style={{ left: `${end}%`, width: `${100 - end}%` }} />}
-      {events.map((e, i) => (
+      {shown.map((e, i) => (
         <i
           key={`${e.date}-${i}`}
           className={`mark ${e.stage}`}

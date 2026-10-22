@@ -306,6 +306,7 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--m
 .track { position: relative; height: 22px; }
 .track .gridline { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--grid); }
 .track .span { position: absolute; top: 10px; height: 2px; background: var(--ink-2); border-radius: 1px; }
+.track .clipped { position: absolute; top: 5px; left: -14px; display: flex; color: var(--muted); }
 .track .wait { position: absolute; top: 10px; border-top: 2px dotted var(--muted); }
 .mark { display: inline-block; width: 12px; height: 12px; border-radius: 50%; }
 .track .mark { position: absolute; top: 5px; margin-left: -6px; box-shadow: 0 0 0 2px var(--surface); }

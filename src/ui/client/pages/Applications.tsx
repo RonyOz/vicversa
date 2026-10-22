@@ -2,7 +2,7 @@ import { Search, SearchX, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import type { Stage } from "../../../schema.js";
-import { timeAxis } from "../../layout.js";
+import { cycleStart, timeAxis } from "../../layout.js";
 import { useDashboard } from "../api.js";
 import { TimelineTrack } from "../components/charts.js";
 import { monthNames, shortDate } from "../dates.js";
@@ -53,8 +53,9 @@ export function Applications() {
   useEffect(() => setText(query.q), [query.q]);
 
   const rows = useMemo(() => (data ? applyQuery(data.rows, query) : []), [data, params]);
+  // Starts at the earliest current cycle, so an old attempt before a reopening doesn't squeeze every row.
   const axis = useMemo(() => {
-    const first = data?.rows.flatMap((r) => r.events.map((e) => e.date)).sort()[0];
+    const first = data?.rows.filter((r) => r.events.length > 0).map((r) => cycleStart(r.events)).sort()[0];
     return data && first ? timeAxis(first, data.today, 100, monthNames(lang, "short")) : null;
   }, [data, lang]);
 
